@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카카오 프로필 텍스트 이미지 생성기</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .color-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .color-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        .range-group {
+            display: grid;
+            grid-template-columns: 2fr 80px;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .range-value {
+            text-align: center;
+            font-weight: 600;
+            color: #666;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .preview-canvas {
+            border: 3px solid #e1e5e9;
+            border-radius: 50%;
+            background: #f8f9fa;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .download-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .download-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .sample-text {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin: 25px 0 15px 0;
+            border-bottom: 2px solid #e1e5e9;
+            padding-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">📱 카카오 프로필 이미지 생성기</h1>
+        
+        <div class="section-title">🎯 메인 텍스트 설정</div>
+        
+        <div class="input-group">
+            <label for="mainText">메인 텍스트 (줄바꿈은 |로 구분)</label>
+            <input type="text" id="mainText" placeholder="JK 또는 JK|운영자" value="JK">
+        </div>
+        
+        <div class="input-group">
+            <label for="mainTextSize">메인 텍스트 크기</label>
+            <div class="range-group">
+                <input type="range" id="mainTextSize" min="50" max="200" value="120">
+                <span class="range-value" id="mainTextSizeValue">120</span>
+            </div>
+        </div>
+        
+        <div class="color-group">
+            <div class="color-input">
+                <label for="bgColor">배경색</label>
+                <input type="color" id="bgColor" value="#4a90e2">
+            </div>
+            <div class="color-input">
+                <label for="mainTextColor">메인 텍스트색</label>
+                <input type="color" id="mainTextColor" value="#ffffff">
+            </div>
+        </div>
+        
+        <div class="section-title">🏷️ 좌상단 칩 설정</div>
+        
+        <div class="input-group">
+            <div class="input-row">
+                <div>
+                    <label for="topText">좌상단 칩 텍스트</label>
+                    <input type="text" id="topText" placeholder="운영" value="운영">
+                </div>
+            </div>
+        </div>
+        
+        <div class="color-group">
+            <div class="color-input">
+                <label for="topChipBg">칩 배경색</label>
+                <input type="color" id="topChipBg" value="#ffffff">
+            </div>
+            <div class="color-input">
+                <label for="topChipText">칩 텍스트색</label>
+                <input type="color" id="topChipText" value="#4a90e2">
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="topChipSize">칩 크기</label>
+            <div class="range-group">
+                <input type="range" id="topChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
+                <span class="range-value" id="topChipSizeValue">1.0</span>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="topChipTextSize">칩 텍스트 크기</label>
+            <div class="range-group">
+                <input type="range" id="topChipTextSize" min="12" max="30" value="18">
+                <span class="range-value" id="topChipTextSizeValue">18</span>
+            </div>
+        </div>
+        
+        <div class="section-title">🏷️ 우하단 칩 설정</div>
+        
+        <div class="input-group">
+            <div class="input-row">
+                <div>
+                    <label for="bottomText">우하단 칩 텍스트</label>
+                    <input type="text" id="bottomText" placeholder="실사용" value="실사용">
+                </div>
+            </div>
+        </div>
+        
+        <div class="color-group">
+            <div class="color-input">
+                <label for="bottomChipBg">칩 배경색</label>
+                <input type="color" id="bottomChipBg" value="#ffffff">
+            </div>
+            <div class="color-input">
+                <label for="bottomChipText">칩 텍스트색</label>
+                <input type="color" id="bottomChipText" value="#4a90e2">
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="bottomChipSize">칩 크기</label>
+            <div class="range-group">
+                <input type="range" id="bottomChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
+                <span class="range-value" id="bottomChipSizeValue">1.0</span>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="bottomChipTextSize">칩 텍스트 크기</label>
+            <div class="range-group">
+                <input type="range" id="bottomChipTextSize" min="12" max="30" value="18">
+                <span class="range-value" id="bottomChipTextSizeValue">18</span>
+            </div>
+        </div>
+        
+        <div class="preview-container">
+            <canvas id="canvas" class="preview-canvas" width="300" height="300"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button class="generate-btn" onclick="generateImage()">🎨 이미지 생성</button>
+            <button class="download-btn" id="downloadBtn" onclick="downloadImage()" disabled>📥 다운로드</button>
+        </div>
+        
+        <div class="sample-text">
+            💡 팁: 메인 텍스트에서 2줄 표시는 | 기호로 구분하세요 (예: JK|운영자)
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        // 범위 입력값 표시 업데이트
+        function updateRangeValues() {
+            document.getElementById('mainTextSizeValue').textContent = document.getElementById('mainTextSize').value;
+            document.getElementById('topChipSizeValue').textContent = document.getElementById('topChipSize').value;
+            document.getElementById('topChipTextSizeValue').textContent = document.getElementById('topChipTextSize').value;
+            document.getElementById('bottomChipSizeValue').textContent = document.getElementById('bottomChipSize').value;
+            document.getElementById('bottomChipTextSizeValue').textContent = document.getElementById('bottomChipTextSize').value;
+        }
+        
+        // 초기 이미지 생성
+        updateRangeValues();
+        generateImage();
+        
+        // 실시간 미리보기를 위한 이벤트 리스너
+        document.addEventListener('input', function() {
+            updateRangeValues();
+            generateImage();
+        });
+        
+        function generateImage() {
+            const mainText = document.getElementById('mainText').value || 'JK';
+            const mainTextSize = parseInt(document.getElementById('mainTextSize').value);
+            const topText = document.getElementById('topText').value || '운영';
+            const bottomText = document.getElementById('bottomText').value || '실사용';
+            const bgColor = document.getElementById('bgColor').value;
+            const mainTextColor = document.getElementById('mainTextColor').value;
+            
+            // 칩 설정
+            const topChipBg = document.getElementById('topChipBg').value;
+            const topChipTextColor = document.getElementById('topChipText').value;
+            const topChipSize = parseFloat(document.getElementById('topChipSize').value);
+            const topChipTextSize = parseInt(document.getElementById('topChipTextSize').value);
+            
+            const bottomChipBg = document.getElementById('bottomChipBg').value;
+            const bottomChipTextColor = document.getElementById('bottomChipText').value;
+            const bottomChipSize = parseFloat(document.getElementById('bottomChipSize').value);
+            const bottomChipTextSize = parseInt(document.getElementById('bottomChipTextSize').value);
+            
+            // 캔버스 클리어
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 배경 그리기
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 메인 텍스트 그리기 (2줄 지원)
+            const textLines = mainText.split('|');
+            ctx.fillStyle = mainTextColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `bold ${mainTextSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+            
+            if (textLines.length === 1) {
+                // 1줄
+                ctx.fillText(textLines[0], canvas.width / 2, canvas.height / 2);
+            } else {
+                // 2줄
+                const lineHeight = mainTextSize * 1.1;
+                const startY = canvas.height / 2 - (lineHeight * (textLines.length - 1)) / 2;
+                textLines.forEach((line, index) => {
+                    ctx.fillText(line, canvas.width / 2, startY + (lineHeight * index));
+                });
+            }
+            
+            // 좌상단 칩 (운영)
+            if (topText.trim()) {
+                drawPillChip(ctx, topText, 75, 50, topChipBg, topChipTextColor, topChipSize, topChipTextSize);
+            }
+            
+            // 우하단 칩 (실사용)
+            if (bottomText.trim()) {
+                drawPillChip(ctx, bottomText, canvas.width - 75, canvas.height - 50, bottomChipBg, bottomChipTextColor, bottomChipSize, bottomChipTextSize);
+            }
+            
+            downloadBtn.disabled = false;
+        }
+        
+        function drawPillChip(ctx, text, x, y, bgColor, textColor, size, textSize) {
+            ctx.font = `bold ${textSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+            const textWidth = ctx.measureText(text).width;
+            const chipWidth = (textWidth + 30) * size;
+            const chipHeight = 26 * size;
+            const radius = chipHeight / 2;
+            
+            // 알약 모양 배경 그리기 (둥근 사각형)
+            ctx.fillStyle = bgColor;
+            ctx.beginPath();
+            ctx.moveTo(x - chipWidth/2 + radius, y - chipHeight/2);
+            ctx.lineTo(x + chipWidth/2 - radius, y - chipHeight/2);
+            ctx.arc(x + chipWidth/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
+            ctx.lineTo(x - chipWidth/2 + radius, y + chipHeight/2);
+            ctx.arc(x - chipWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 알약 모양 테두리 그리기
+            ctx.strokeStyle = textColor;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - chipWidth/2 + radius, y - chipHeight/2);
+            ctx.lineTo(x + chipWidth/2 - radius, y - chipHeight/2);
+            ctx.arc(x + chipWidth/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
+            ctx.lineTo(x - chipWidth/2 + radius, y + chipHeight/2);
+            ctx.arc(x - chipWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
+            ctx.closePath();
+            ctx.stroke();
+            
+            // 칩 텍스트 그리기
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y);
+        }
+        
+        function downloadImage() {
+            // 정사각형으로 다시 그리기 (1080x1080 고해상도)
+            const highResCanvas = document.createElement('canvas');
+            const highResCtx = highResCanvas.getContext('2d');
+            highResCanvas.width = 1080;
+            highResCanvas.height = 1080;
+            
+            const mainText = document.getElementById('mainText').value || 'JK';
+            const mainTextSize = parseInt(document.getElementById('mainTextSize').value);
+            const topText = document.getElementById('topText').value || '운영';
+            const bottomText = document.getElementById('bottomText').value || '실사용';
+            const bgColor = document.getElementById('bgColor').value;
+            const mainTextColor = document.getElementById('mainTextColor').value;
+            
+            // 칩 설정
+            const topChipBg = document.getElementById('topChipBg').value;
+            const topChipTextColor = document.getElementById('topChipText').value;
+            const topChipSize = parseFloat(document.getElementById('topChipSize').value);
+            const topChipTextSize = parseInt(document.getElementById('topChipTextSize').value);
+            
+            const bottomChipBg = document.getElementById('bottomChipBg').value;
+            const bottomChipTextColor = document.getElementById('bottomChipText').value;
+            const bottomChipSize = parseFloat(document.getElementById('bottomChipSize').value);
+            const bottomChipTextSize = parseInt(document.getElementById('bottomChipTextSize').value);
+            
+            const scale = 3.6; // 1080/300 = 3.6 배율
+            
+            // 고해상도로 다시 그리기
+            highResCtx.fillStyle = bgColor;
+            highResCtx.fillRect(0, 0, highResCanvas.width, highResCanvas.height);
+            
+            // 메인 텍스트 그리기 (고해상도)
+            const textLines = mainText.split('|');
+            highResCtx.fillStyle = mainTextColor;
+            highResCtx.textAlign = 'center';
+            highResCtx.textBaseline = 'middle';
+            highResCtx.font = `bold ${mainTextSize * scale}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+            
+            if (textLines.length === 1) {
+                // 1줄
+                highResCtx.fillText(textLines[0], highResCanvas.width / 2, highResCanvas.height / 2);
+            } else {
+                // 2줄
+                const lineHeight = mainTextSize * scale * 1.1;
+                const startY = highResCanvas.height / 2 - (lineHeight * (textLines.length - 1)) / 2;
+                textLines.forEach((line, index) => {
+                    highResCtx.fillText(line, highResCanvas.width / 2, startY + (lineHeight * index));
+                });
+            }
+            
+            // 좌상단 칩 (고해상도)
+            if (topText.trim()) {
+                drawHighResPillChip(highResCtx, topText, 270, 180, topChipBg, topChipTextColor, topChipSize, topChipTextSize * scale);
+            }
+            
+            // 우하단 칩 (고해상도)
+            if (bottomText.trim()) {
+                drawHighResPillChip(highResCtx, bottomText, highResCanvas.width - 270, highResCanvas.height - 180, bottomChipBg, bottomChipTextColor, bottomChipSize, bottomChipTextSize * scale);
+            }
+            
+            // 다운로드
+            const link = document.createElement('a');
+            link.download = `kakao_profile_${mainText.replace('|', '_')}_${Date.now()}.png`;
+            link.href = highResCanvas.toDataURL();
+            link.click();
+        }
+        
+        function drawHighResPillChip(ctx, text, x, y, bgColor, textColor, size, textSize) {
+            ctx.font = `bold ${textSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+            const textWidth = ctx.measureText(text).width;
+            const chipWidth = (textWidth + 108) * size;
+            const chipHeight = 94 * size;
+            const radius = chipHeight / 2;
+            
+            // 알약 모양 배경 그리기
+            ctx.fillStyle = bgColor;
+            ctx.beginPath();
+            ctx.moveTo(x - chipWidth/2 + radius, y - chipHeight/2);
+            ctx.lineTo(x + chipWidth/2 - radius, y - chipHeight/2);
+            ctx.arc(x + chipWidth/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
+            ctx.lineTo(x - chipWidth/2 + radius, y + chipHeight/2);
+            ctx.arc(x - chipWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 알약 모양 테두리 그리기
+            ctx.strokeStyle = textColor;
+            ctx.lineWidth = 7;
+            ctx.beginPath();
+            ctx.moveTo(x - chipWidth/2 + radius, y - chipHeight/2);
+            ctx.lineTo(x + chipWidth/2 - radius, y - chipHeight/2);
+            ctx.arc(x + chipWidth/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
+            ctx.lineTo(x - chipWidth/2 + radius, y + chipHeight/2);
+            ctx.arc(x - chipWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
+            ctx.closePath();
+            ctx.stroke();
+            
+            // 칩 텍스트 그리기
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y);
+        }
+    </script>
+</body>
+</html>
