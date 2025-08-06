@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>카카오 프로필 텍스트 이미지 생성기</title>
+    <title>메신저 프로필 텍스트 이미지 생성기</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -18,21 +22,90 @@
         
         .container {
             background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            max-width: 600px;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            max-width: 800px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
+            backdrop-filter: blur(20px);
+            position: relative;
+        }
+        
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 4px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .lang-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.2s ease;
+        }
+        
+        .lang-btn.active {
+            background: #4299e1;
+            color: white;
+            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.2);
+        }
+        
+        .lang-btn:hover:not(.active) {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 40px;
         }
         
         .title {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 24px;
+            color: #1a202c;
+            margin-bottom: 8px;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            color: #718096;
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .section {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section-title {
+            font-size: 18px;
             font-weight: 700;
+            color: #2d3748;
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .input-group {
@@ -50,243 +123,472 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #555;
+            color: #4a5568;
+            font-size: 14px;
         }
         
         input[type="text"], input[type="number"] {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid #e1e5e9;
+            border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 16px;
-            transition: border-color 0.3s ease;
-            box-sizing: border-box;
+            transition: all 0.3s ease;
+            background: white;
+            color: #2d3748;
         }
         
         input[type="text"]:focus, input[type="number"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
         }
         
         .color-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 20px;
         }
         
         .color-input {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .color-input:hover {
+            border-color: #cbd5e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         input[type="color"] {
-            width: 50px;
+            width: 40px;
             height: 40px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .range-group {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            gap: 16px;
+            align-items: center;
         }
         
         input[type="range"] {
             width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            appearance: none;
         }
         
-        .range-group {
-            display: grid;
-            grid-template-columns: 2fr 80px;
-            gap: 10px;
-            align-items: center;
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4299e1;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
         .range-value {
             text-align: center;
             font-weight: 600;
-            color: #666;
-            background: #f8f9fa;
-            padding: 8px;
-            border-radius: 6px;
+            color: #2d3748;
+            background: #f7fafc;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 70px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .range-value:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .chip-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .chip-position {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .chip-position:hover {
+            border-color: #cbd5e0;
+        }
+        
+        .chip-position.active {
+            border-color: #4299e1;
+            background: #ebf8ff;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .chip-position.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .position-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .position-toggle {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        
+        .chip-position.active .position-toggle {
+            background: #4299e1;
+            border-color: #4299e1;
+            color: white;
+        }
+        
+        .position-label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        
+        .chip-settings {
+            margin-top: 12px;
+            opacity: 0.3;
+            transition: opacity 0.2s ease;
+        }
+        
+        .chip-position.active .chip-settings {
+            opacity: 1;
         }
         
         .preview-container {
             display: flex;
             justify-content: center;
-            margin: 30px 0;
+            margin: 40px 0;
+            padding: 30px;
+            background: #f8fafc;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
         }
         
         .preview-canvas {
-            border: 3px solid #e1e5e9;
+            border: 3px solid #cbd5e0;
             border-radius: 50%;
-            background: #f8f9fa;
+            background: white;
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         
         .controls {
             display: flex;
-            gap: 10px;
+            gap: 16px;
             justify-content: center;
+            margin-top: 32px;
         }
         
         button {
-            padding: 12px 24px;
+            padding: 16px 32px;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .generate-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             color: white;
+            box-shadow: 0 4px 14px 0 rgba(66, 153, 225, 0.3);
         }
         
         .generate-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 6px 20px 0 rgba(66, 153, 225, 0.4);
+        }
+        
+        .generate-btn:active {
+            transform: translateY(0);
         }
         
         .download-btn {
-            background: #28a745;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
             color: white;
+            box-shadow: 0 4px 14px 0 rgba(72, 187, 120, 0.3);
         }
         
         .download-btn:hover {
-            background: #218838;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(72, 187, 120, 0.4);
         }
         
         .download-btn:disabled {
-            background: #ccc;
+            background: #a0aec0;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
         
-        .sample-text {
-            background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
+        .tip-card {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            border: 1px solid #90cdf4;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 24px;
+            color: #2c5282;
             font-size: 14px;
-            color: #666;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-            margin: 25px 0 15px 0;
-            border-bottom: 2px solid #e1e5e9;
-            padding-bottom: 8px;
+        .tip-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+            
+            .container {
+                padding: 24px;
+            }
+            
+            .language-selector {
+                top: 16px;
+                right: 16px;
+            }
+            
+            .header {
+                margin-top: 60px;
+            }
+            
+            .color-group, .chip-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="title">📱 카카오 프로필 이미지 생성기</h1>
-        
-        <div class="section-title">🎯 메인 텍스트 설정</div>
-        
-        <div class="input-group">
-            <label for="mainText">메인 텍스트 (줄바꿈은 |로 구분)</label>
-            <input type="text" id="mainText" placeholder="JK 또는 JK|운영자" value="JK">
+        <!-- 언어 선택 버튼 -->
+        <div class="language-selector">
+            <button class="lang-btn active" onclick="changeLanguage('ko')">KR</button>
+            <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
         </div>
         
-        <div class="input-group">
-            <label for="mainTextSize">메인 텍스트 크기</label>
-            <div class="range-group">
-                <input type="range" id="mainTextSize" min="50" max="200" value="120">
-                <span class="range-value" id="mainTextSizeValue">120</span>
-            </div>
+        <div class="header">
+            <h1 class="title" data-kr="📱 메신저 프로필 이미지 생성기" data-en="📱 Messenger Profile Image Generator">📱 메신저 프로필 이미지 생성기</h1>
+            <p class="subtitle" data-kr="QA 환경별 프로필을 쉽게 만들어보세요" data-en="Easily create profiles for different QA environments">QA 환경별 프로필을 쉽게 만들어보세요</p>
         </div>
         
-        <div class="color-group">
-            <div class="color-input">
-                <label for="bgColor">배경색</label>
-                <input type="color" id="bgColor" value="#4a90e2">
+        <div class="section">
+            <div class="section-title" data-kr="🎯 메인 텍스트 설정" data-en="🎯 Main Text Settings">🎯 메인 텍스트 설정</div>
+            
+            <div class="input-group">
+                <label for="mainText" data-kr="메인 텍스트 (줄바꿈은 |로 구분)" data-en="Main Text (Use | for line breaks)">메인 텍스트 (줄바꿈은 |로 구분)</label>
+                <input type="text" id="mainText" data-kr-placeholder="JK 또는 JK|운영자" data-en-placeholder="JK or JK|Admin" placeholder="JK 또는 JK|운영자" value="JK">
             </div>
-            <div class="color-input">
-                <label for="mainTextColor">메인 텍스트색</label>
-                <input type="color" id="mainTextColor" value="#ffffff">
+            
+            <div class="input-group">
+                <label for="mainTextSize" data-kr="메인 텍스트 크기" data-en="Main Text Size">메인 텍스트 크기</label>
+                <div class="range-group">
+                    <input type="range" id="mainTextSize" min="50" max="200" value="120">
+                    <input type="number" class="range-value" id="mainTextSizeValue" min="50" max="200" value="120">
+                </div>
             </div>
-        </div>
-        
-        <div class="section-title">🏷️ 좌상단 칩 설정</div>
-        
-        <div class="input-group">
-            <div class="input-row">
-                <div>
-                    <label for="topText">좌상단 칩 텍스트</label>
-                    <input type="text" id="topText" placeholder="운영" value="운영">
+            
+            <div class="color-group">
+                <div class="color-input">
+                    <input type="color" id="bgColor" value="#4a90e2">
+                    <label for="bgColor" data-kr="배경색" data-en="Background Color">배경색</label>
+                </div>
+                <div class="color-input">
+                    <input type="color" id="mainTextColor" value="#ffffff">
+                    <label for="mainTextColor" data-kr="메인 텍스트색" data-en="Main Text Color">메인 텍스트색</label>
                 </div>
             </div>
         </div>
         
-        <div class="color-group">
-            <div class="color-input">
-                <label for="topChipBg">칩 배경색</label>
-                <input type="color" id="topChipBg" value="#ffffff">
-            </div>
-            <div class="color-input">
-                <label for="topChipText">칩 텍스트색</label>
-                <input type="color" id="topChipText" value="#4a90e2">
-            </div>
-        </div>
-        
-        <div class="input-group">
-            <label for="topChipSize">칩 크기</label>
-            <div class="range-group">
-                <input type="range" id="topChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
-                <span class="range-value" id="topChipSizeValue">1.0</span>
-            </div>
-        </div>
-        
-        <div class="input-group">
-            <label for="topChipTextSize">칩 텍스트 크기</label>
-            <div class="range-group">
-                <input type="range" id="topChipTextSize" min="12" max="30" value="18">
-                <span class="range-value" id="topChipTextSizeValue">18</span>
-            </div>
-        </div>
-        
-        <div class="section-title">🏷️ 우하단 칩 설정</div>
-        
-        <div class="input-group">
-            <div class="input-row">
-                <div>
-                    <label for="bottomText">우하단 칩 텍스트</label>
-                    <input type="text" id="bottomText" placeholder="실사용" value="실사용">
+        <div class="section">
+            <div class="section-title" data-kr="🏷️ 칩 위치 및 설정 (0-4개 선택 가능)" data-en="🏷️ Chip Position & Settings (Select 0-4 chips)">🏷️ 칩 위치 및 설정 (0-4개 선택 가능)</div>
+            
+            <div class="chip-grid">
+                <!-- 좌상단 -->
+                <div class="chip-position active" data-position="topLeft">
+                    <div class="position-header">
+                        <div class="position-toggle">✓</div>
+                        <div class="position-label" data-kr="🏷️ 좌상단" data-en="🏷️ Top Left">🏷️ 좌상단</div>
+                    </div>
+                    <div class="chip-settings">
+                        <div class="input-group">
+                            <input type="text" id="topLeftText" data-kr-placeholder="운영" data-en-placeholder="Production" placeholder="운영" value="운영">
+                        </div>
+                        <div class="color-group">
+                            <div class="color-input">
+                                <input type="color" id="topLeftChipBg" value="#ffffff">
+                                <label data-kr="배경색" data-en="Background">배경색</label>
+                            </div>
+                            <div class="color-input">
+                                <input type="color" id="topLeftChipText" value="#4a90e2">
+                                <label data-kr="텍스트색" data-en="Text Color">텍스트색</label>
+                            </div>
+                        </div>
+                        <div class="range-group">
+                            <input type="range" id="topLeftChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <input type="number" class="range-value" id="topLeftChipSizeValue" min="0.5" max="2.0" step="0.1" value="1.0">
+                        </div>
+                        <div class="range-group">
+                            <input type="range" id="topLeftChipTextSize" min="12" max="30" value="18">
+                            <input type="number" class="range-value" id="topLeftChipTextSizeValue" min="12" max="30" value="18">
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="color-group">
-            <div class="color-input">
-                <label for="bottomChipBg">칩 배경색</label>
-                <input type="color" id="bottomChipBg" value="#ffffff">
-            </div>
-            <div class="color-input">
-                <label for="bottomChipText">칩 텍스트색</label>
-                <input type="color" id="bottomChipText" value="#4a90e2">
-            </div>
-        </div>
-        
-        <div class="input-group">
-            <label for="bottomChipSize">칩 크기</label>
-            <div class="range-group">
-                <input type="range" id="bottomChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
-                <span class="range-value" id="bottomChipSizeValue">1.0</span>
-            </div>
-        </div>
-        
-        <div class="input-group">
-            <label for="bottomChipTextSize">칩 텍스트 크기</label>
-            <div class="range-group">
-                <input type="range" id="bottomChipTextSize" min="12" max="30" value="18">
-                <span class="range-value" id="bottomChipTextSizeValue">18</span>
+                
+                <!-- 우상단 -->
+                <div class="chip-position" data-position="topRight">
+                    <div class="position-header">
+                        <div class="position-toggle"></div>
+                        <div class="position-label" data-kr="🏷️ 우상단" data-en="🏷️ Top Right">🏷️ 우상단</div>
+                    </div>
+                    <div class="chip-settings">
+                        <div class="input-group">
+                            <input type="text" id="topRightText" data-kr-placeholder="개발" data-en-placeholder="Development" placeholder="개발" value="개발">
+                        </div>
+                        <div class="color-group">
+                            <div class="color-input">
+                                <input type="color" id="topRightChipBg" value="#ffffff">
+                                <label data-kr="배경색" data-en="Background">배경색</label>
+                            </div>
+                            <div class="color-input">
+                                <input type="color" id="topRightChipText" value="#e53e3e">
+                                <label data-kr="텍스트색" data-en="Text Color">텍스트색</label>
+                            </div>
+                        </div>
+                        <div class="range-group">
+                            <input type="range" id="topRightChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <input type="number" class="range-value" id="topRightChipSizeValue" min="0.5" max="2.0" step="0.1" value="1.0">
+                        </div>
+                        <div class="range-group">
+                            <input type="range" id="topRightChipTextSize" min="12" max="30" value="18">
+                            <input type="number" class="range-value" id="topRightChipTextSizeValue" min="12" max="30" value="18">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 좌하단 -->
+                <div class="chip-position" data-position="bottomLeft">
+                    <div class="position-header">
+                        <div class="position-toggle"></div>
+                        <div class="position-label" data-kr="🏷️ 좌하단" data-en="🏷️ Bottom Left">🏷️ 좌하단</div>
+                    </div>
+                    <div class="chip-settings">
+                        <div class="input-group">
+                            <input type="text" id="bottomLeftText" data-kr-placeholder="테스트" data-en-placeholder="Testing" placeholder="테스트" value="테스트">
+                        </div>
+                        <div class="color-group">
+                            <div class="color-input">
+                                <input type="color" id="bottomLeftChipBg" value="#ffffff">
+                                <label data-kr="배경색" data-en="Background">배경색</label>
+                            </div>
+                            <div class="color-input">
+                                <input type="color" id="bottomLeftChipText" value="#38a169">
+                                <label data-kr="텍스트색" data-en="Text Color">텍스트색</label>
+                            </div>
+                        </div>
+                        <div class="range-group">
+                            <input type="range" id="bottomLeftChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <input type="number" class="range-value" id="bottomLeftChipSizeValue" min="0.5" max="2.0" step="0.1" value="1.0">
+                        </div>
+                        <div class="range-group">
+                            <input type="range" id="bottomLeftChipTextSize" min="12" max="30" value="18">
+                            <input type="number" class="range-value" id="bottomLeftChipTextSizeValue" min="12" max="30" value="18">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 우하단 -->
+                <div class="chip-position active" data-position="bottomRight">
+                    <div class="position-header">
+                        <div class="position-toggle">✓</div>
+                        <div class="position-label" data-kr="🏷️ 우하단" data-en="🏷️ Bottom Right">🏷️ 우하단</div>
+                    </div>
+                    <div class="chip-settings">
+                        <div class="input-group">
+                            <input type="text" id="bottomRightText" data-kr-placeholder="실사용" data-en-placeholder="Live" placeholder="실사용" value="실사용">
+                        </div>
+                        <div class="color-group">
+                            <div class="color-input">
+                                <input type="color" id="bottomRightChipBg" value="#ffffff">
+                                <label data-kr="배경색" data-en="Background">배경색</label>
+                            </div>
+                            <div class="color-input">
+                                <input type="color" id="bottomRightChipText" value="#4a90e2">
+                                <label data-kr="텍스트색" data-en="Text Color">텍스트색</label>
+                            </div>
+                        </div>
+                        <div class="range-group">
+                            <input type="range" id="bottomRightChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <input type="number" class="range-value" id="bottomRightChipSizeValue" min="0.5" max="2.0" step="0.1" value="1.0">
+                        </div>
+                        <div class="range-group">
+                            <input type="range" id="bottomRightChipTextSize" min="12" max="30" value="18">
+                            <input type="number" class="range-value" id="bottomRightChipTextSizeValue" min="12" max="30" value="18">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -295,12 +597,22 @@
         </div>
         
         <div class="controls">
-            <button class="generate-btn" onclick="generateImage()">🎨 이미지 생성</button>
-            <button class="download-btn" id="downloadBtn" onclick="downloadImage()" disabled>📥 다운로드</button>
+            <button class="generate-btn" onclick="generateImage()">
+                <span data-kr="🎨 이미지 생성" data-en="🎨 Generate Image">🎨 이미지 생성</span>
+            </button>
+            <button class="download-btn" id="downloadBtn" onclick="downloadImage()" disabled>
+                <span data-kr="📥 다운로드" data-en="📥 Download">📥 다운로드</span>
+            </button>
         </div>
         
-        <div class="sample-text">
-            💡 팁: 메인 텍스트에서 2줄 표시는 | 기호로 구분하세요 (예: JK|운영자)
+        <div class="tip-card">
+            <span class="tip-icon">💡</span>
+            <div>
+                <div data-kr="<strong>팁:</strong> 각 칩 위치를 클릭해서 활성화/비활성화할 수 있습니다. 0-4개까지 자유롭게 선택하세요!<br>메인 텍스트에서 2줄 표시는 | 기호로 구분하세요 (예: JK|운영자)" data-en="<strong>Tip:</strong> Click each chip position to activate/deactivate. Feel free to select from 0-4 chips!<br>For 2-line main text, separate with | symbol (e.g., JK|Admin)">
+                    <strong>팁:</strong> 각 칩 위치를 클릭해서 활성화/비활성화할 수 있습니다. 0-4개까지 자유롭게 선택하세요!
+                    <br>메인 텍스트에서 2줄 표시는 | 기호로 구분하세요 (예: JK|운영자)
+                </div>
+            </div>
         </div>
     </div>
 
@@ -308,14 +620,89 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const downloadBtn = document.getElementById('downloadBtn');
+        let currentLanguage = 'ko';
         
-        // 범위 입력값 표시 업데이트
+        // 칩 위치별 좌표 정의
+        const chipPositions = {
+            topLeft: { x: 75, y: 50 },
+            topRight: { x: 225, y: 50 },
+            bottomLeft: { x: 75, y: 250 },
+            bottomRight: { x: 225, y: 250 }
+        };
+        
+        // 언어 변경 함수
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            
+            // 언어 버튼 스타일 업데이트
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="changeLanguage('${lang}')"]`).classList.add('active');
+            
+            // 언어 코드 매핑 (ko -> kr)
+            const dataLang = lang === 'ko' ? 'kr' : 'en';
+            
+            // 모든 텍스트 업데이트
+            document.querySelectorAll('[data-kr][data-en]').forEach(element => {
+                const newText = element.getAttribute(`data-${dataLang}`);
+                if (newText) {
+                    // HTML이 포함된 경우 innerHTML 사용, 아니면 textContent 사용
+                    if (newText.includes('<') && newText.includes('>')) {
+                        element.innerHTML = newText;
+                    } else {
+                        element.textContent = newText;
+                    }
+                }
+            });
+            
+            // placeholder 업데이트
+            document.querySelectorAll('[data-kr-placeholder][data-en-placeholder]').forEach(element => {
+                const newPlaceholder = element.getAttribute(`data-${dataLang}-placeholder`);
+                if (newPlaceholder) {
+                    element.placeholder = newPlaceholder;
+                }
+            });
+            
+            // HTML lang 속성 업데이트
+            document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
+        }
+        
+        // 칩 토글 기능
+        document.querySelectorAll('.chip-position').forEach(chip => {
+            chip.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const toggle = this.querySelector('.position-toggle');
+                if (this.classList.contains('active')) {
+                    toggle.textContent = '✓';
+                } else {
+                    toggle.textContent = '';
+                }
+                generateImage();
+            });
+        });
+        
+        // 범위 입력값 표시 업데이트 및 동기화
         function updateRangeValues() {
-            document.getElementById('mainTextSizeValue').textContent = document.getElementById('mainTextSize').value;
-            document.getElementById('topChipSizeValue').textContent = document.getElementById('topChipSize').value;
-            document.getElementById('topChipTextSizeValue').textContent = document.getElementById('topChipTextSize').value;
-            document.getElementById('bottomChipSizeValue').textContent = document.getElementById('bottomChipSize').value;
-            document.getElementById('bottomChipTextSizeValue').textContent = document.getElementById('bottomChipTextSize').value;
+            // 메인 텍스트
+            document.getElementById('mainTextSizeValue').value = document.getElementById('mainTextSize').value;
+            
+            // 각 칩 위치별 업데이트
+            ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].forEach(position => {
+                document.getElementById(`${position}ChipSizeValue`).value = document.getElementById(`${position}ChipSize`).value;
+                document.getElementById(`${position}ChipTextSizeValue`).value = document.getElementById(`${position}ChipTextSize`).value;
+            });
+        }
+        
+        function updateSliderValues() {
+            // 메인 텍스트
+            document.getElementById('mainTextSize').value = document.getElementById('mainTextSizeValue').value;
+            
+            // 각 칩 위치별 업데이트
+            ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].forEach(position => {
+                document.getElementById(`${position}ChipSize`).value = document.getElementById(`${position}ChipSizeValue`).value;
+                document.getElementById(`${position}ChipTextSize`).value = document.getElementById(`${position}ChipTextSizeValue`).value;
+            });
         }
         
         // 초기 이미지 생성
@@ -323,29 +710,23 @@
         generateImage();
         
         // 실시간 미리보기를 위한 이벤트 리스너
-        document.addEventListener('input', function() {
-            updateRangeValues();
+        document.addEventListener('input', function(e) {
+            // 슬라이더가 변경되면 숫자 입력을 업데이트
+            if (e.target.type === 'range') {
+                updateRangeValues();
+            }
+            // 숫자 입력이 변경되면 슬라이더를 업데이트
+            else if (e.target.classList.contains('range-value')) {
+                updateSliderValues();
+            }
             generateImage();
         });
         
         function generateImage() {
             const mainText = document.getElementById('mainText').value || 'JK';
             const mainTextSize = parseInt(document.getElementById('mainTextSize').value);
-            const topText = document.getElementById('topText').value || '운영';
-            const bottomText = document.getElementById('bottomText').value || '실사용';
             const bgColor = document.getElementById('bgColor').value;
             const mainTextColor = document.getElementById('mainTextColor').value;
-            
-            // 칩 설정
-            const topChipBg = document.getElementById('topChipBg').value;
-            const topChipTextColor = document.getElementById('topChipText').value;
-            const topChipSize = parseFloat(document.getElementById('topChipSize').value);
-            const topChipTextSize = parseInt(document.getElementById('topChipTextSize').value);
-            
-            const bottomChipBg = document.getElementById('bottomChipBg').value;
-            const bottomChipTextColor = document.getElementById('bottomChipText').value;
-            const bottomChipSize = parseFloat(document.getElementById('bottomChipSize').value);
-            const bottomChipTextSize = parseInt(document.getElementById('bottomChipTextSize').value);
             
             // 캔버스 클리어
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -373,15 +754,21 @@
                 });
             }
             
-            // 좌상단 칩 (운영)
-            if (topText.trim()) {
-                drawPillChip(ctx, topText, 75, 50, topChipBg, topChipTextColor, topChipSize, topChipTextSize);
-            }
-            
-            // 우하단 칩 (실사용)
-            if (bottomText.trim()) {
-                drawPillChip(ctx, bottomText, canvas.width - 75, canvas.height - 50, bottomChipBg, bottomChipTextColor, bottomChipSize, bottomChipTextSize);
-            }
+            // 활성화된 칩들 그리기
+            document.querySelectorAll('.chip-position.active').forEach(chipElement => {
+                const position = chipElement.dataset.position;
+                const text = document.getElementById(`${position}Text`).value;
+                
+                if (text.trim()) {
+                    const bgColor = document.getElementById(`${position}ChipBg`).value;
+                    const textColor = document.getElementById(`${position}ChipText`).value;
+                    const size = parseFloat(document.getElementById(`${position}ChipSize`).value);
+                    const textSize = parseInt(document.getElementById(`${position}ChipTextSize`).value);
+                    const coords = chipPositions[position];
+                    
+                    drawPillChip(ctx, text, coords.x, coords.y, bgColor, textColor, size, textSize);
+                }
+            });
             
             downloadBtn.disabled = false;
         }
@@ -393,6 +780,13 @@
             const chipHeight = 26 * size;
             const radius = chipHeight / 2;
             
+            // 그림자 효과 추가
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+            ctx.shadowBlur = 8 * size;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 2 * size;
+            
             // 알약 모양 배경 그리기 (둥근 사각형)
             ctx.fillStyle = bgColor;
             ctx.beginPath();
@@ -403,6 +797,8 @@
             ctx.arc(x - chipWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
             ctx.closePath();
             ctx.fill();
+            
+            ctx.restore();
             
             // 알약 모양 테두리 그리기
             ctx.strokeStyle = textColor;
@@ -432,23 +828,18 @@
             
             const mainText = document.getElementById('mainText').value || 'JK';
             const mainTextSize = parseInt(document.getElementById('mainTextSize').value);
-            const topText = document.getElementById('topText').value || '운영';
-            const bottomText = document.getElementById('bottomText').value || '실사용';
             const bgColor = document.getElementById('bgColor').value;
             const mainTextColor = document.getElementById('mainTextColor').value;
             
-            // 칩 설정
-            const topChipBg = document.getElementById('topChipBg').value;
-            const topChipTextColor = document.getElementById('topChipText').value;
-            const topChipSize = parseFloat(document.getElementById('topChipSize').value);
-            const topChipTextSize = parseInt(document.getElementById('topChipTextSize').value);
-            
-            const bottomChipBg = document.getElementById('bottomChipBg').value;
-            const bottomChipTextColor = document.getElementById('bottomChipText').value;
-            const bottomChipSize = parseFloat(document.getElementById('bottomChipSize').value);
-            const bottomChipTextSize = parseInt(document.getElementById('bottomChipTextSize').value);
-            
             const scale = 3.6; // 1080/300 = 3.6 배율
+            
+            // 고해상도 칩 위치 좌표
+            const highResChipPositions = {
+                topLeft: { x: 270, y: 180 },
+                topRight: { x: 810, y: 180 },
+                bottomLeft: { x: 270, y: 900 },
+                bottomRight: { x: 810, y: 900 }
+            };
             
             // 고해상도로 다시 그리기
             highResCtx.fillStyle = bgColor;
@@ -473,19 +864,25 @@
                 });
             }
             
-            // 좌상단 칩 (고해상도)
-            if (topText.trim()) {
-                drawHighResPillChip(highResCtx, topText, 270, 180, topChipBg, topChipTextColor, topChipSize, topChipTextSize * scale);
-            }
-            
-            // 우하단 칩 (고해상도)
-            if (bottomText.trim()) {
-                drawHighResPillChip(highResCtx, bottomText, highResCanvas.width - 270, highResCanvas.height - 180, bottomChipBg, bottomChipTextColor, bottomChipSize, bottomChipTextSize * scale);
-            }
+            // 활성화된 칩들 그리기 (고해상도)
+            document.querySelectorAll('.chip-position.active').forEach(chipElement => {
+                const position = chipElement.dataset.position;
+                const text = document.getElementById(`${position}Text`).value;
+                
+                if (text.trim()) {
+                    const bgColor = document.getElementById(`${position}ChipBg`).value;
+                    const textColor = document.getElementById(`${position}ChipText`).value;
+                    const size = parseFloat(document.getElementById(`${position}ChipSize`).value);
+                    const textSize = parseInt(document.getElementById(`${position}ChipTextSize`).value);
+                    const coords = highResChipPositions[position];
+                    
+                    drawHighResPillChip(highResCtx, text, coords.x, coords.y, bgColor, textColor, size, textSize * scale);
+                }
+            });
             
             // 다운로드
             const link = document.createElement('a');
-            link.download = `kakao_profile_${mainText.replace('|', '_')}_${Date.now()}.png`;
+            link.download = `messenger_profile_${mainText.replace('|', '_')}_${Date.now()}.png`;
             link.href = highResCanvas.toDataURL();
             link.click();
         }
@@ -497,6 +894,13 @@
             const chipHeight = 94 * size;
             const radius = chipHeight / 2;
             
+            // 그림자 효과 추가 (고해상도)
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+            ctx.shadowBlur = 28 * size;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 8 * size;
+            
             // 알약 모양 배경 그리기
             ctx.fillStyle = bgColor;
             ctx.beginPath();
@@ -507,6 +911,8 @@
             ctx.arc(x - chipWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
             ctx.closePath();
             ctx.fill();
+            
+            ctx.restore();
             
             // 알약 모양 테두리 그리기
             ctx.strokeStyle = textColor;
