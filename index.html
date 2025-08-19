@@ -3,309 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>메신저 프로필 텍스트 이미지 생성기</title>
+    <title>Work Assistant - 업무 도구 모음</title>
+    
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- XLSX 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
-        * {
-            box-sizing: border-box;
+        :root {
+            --header-height: 64px;
+            --transition-speed: 0.3s;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+        .app-layout {
+            display: grid;
+            grid-template-rows: var(--header-height) 1fr;
+            height: 100vh;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
         }
-        
-        .container {
+
+        .header {
+            background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+        }
+
+        .card {
             background: white;
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 
-                0 4px 6px -1px rgba(0, 0, 0, 0.1),
-                0 2px 4px -1px rgba(0, 0, 0, 0.06),
-                0 0 0 1px rgba(255, 255, 255, 0.05);
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            backdrop-filter: blur(20px);
-            position: relative;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all var(--transition-speed) ease;
+            border: 1px solid rgba(251, 191, 36, 0.2);
         }
-        
-        .language-selector {
+
+        .card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+            border-color: rgba(251, 191, 36, 0.4);
+        }
+
+        .tab-button {
+            position: relative;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all var(--transition-speed) ease;
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(0, 0, 0, 0.9);
+        }
+
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.3);
+            color: #000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button.active::after {
+            content: '';
             position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            height: 2px;
+            background: #dc2626;
+            border-radius: 1px;
+        }
+
+        .loading-spinner {
+            border: 3px solid #fde68a;
+            border-top: 3px solid #f59e0b;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
             top: 20px;
             right: 20px;
-            display: flex;
-            background: #f7fafc;
-            border-radius: 12px;
-            padding: 4px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .lang-btn {
-            padding: 8px 16px;
-            border: none;
-            background: transparent;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #718096;
-            transition: all 0.2s ease;
-        }
-        
-        .lang-btn.active {
-            background: #4299e1;
-            color: white;
-            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.2);
-        }
-        
-        .lang-btn:hover:not(.active) {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            margin-top: 40px;
-        }
-        
-        .title {
-            color: #1a202c;
-            margin-bottom: 8px;
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-        
-        .subtitle {
-            color: #718096;
-            font-size: 16px;
-            font-weight: 400;
-        }
-        
-        .section {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3748;
-            margin: 0 0 20px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .input-group {
-            margin-bottom: 20px;
-        }
-        
-        .input-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 15px;
-            align-items: end;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 14px;
-        }
-        
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s ease;
             background: white;
-            color: #2d3748;
-        }
-        
-        input[type="text"]:focus, input[type="number"]:focus {
-            outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-        }
-        
-        .color-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .color-input {
-            background: white;
-            border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s ease;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #f59e0b;
+            padding: 1rem 1.5rem;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
         }
-        
-        .color-input:hover {
-            border-color: #cbd5e0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
-        
-        input[type="color"] {
-            width: 40px;
-            height: 40px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .range-group {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-            display: grid;
-            grid-template-columns: 1fr 80px;
-            gap: 16px;
-            align-items: center;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #e2e8f0;
-            outline: none;
-            appearance: none;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #4299e1;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .range-value {
-            text-align: center;
-            font-weight: 600;
-            color: #2d3748;
-            background: #f7fafc;
-            padding: 8px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            min-width: 70px;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-        
-        .range-value:focus {
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-        }
-        
-        .chip-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .chip-position {
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-        
-        .chip-position:hover {
-            border-color: #cbd5e0;
-        }
-        
-        .chip-position.active {
-            border-color: #4299e1;
-            background: #ebf8ff;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-        }
-        
-        .chip-position.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .position-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        
-        .position-toggle {
-            width: 16px;
-            height: 16px;
-            border: 2px solid #cbd5e0;
-            border-radius: 3px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            transition: all 0.2s ease;
-        }
-        
-        .chip-position.active .position-toggle {
-            background: #4299e1;
-            border-color: #4299e1;
-            color: white;
-        }
-        
-        .position-label {
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 14px;
-        }
-        
-        .chip-settings {
-            margin-top: 12px;
-            opacity: 0.3;
-            transition: opacity 0.2s ease;
-        }
-        
-        .chip-position.active .chip-settings {
-            opacity: 1;
-        }
-        
-        .preview-container {
-            display: flex;
-            justify-content: center;
-            margin: 40px 0;
-            padding: 30px;
-            background: #f8fafc;
-            border-radius: 20px;
-            border: 1px solid #e2e8f0;
-        }
-        
+
+        /* 프로필 생성기 스타일 */
         .preview-canvas {
             border: 3px solid #cbd5e0;
             border-radius: 50%;
@@ -315,427 +147,611 @@
                 0 10px 10px -5px rgba(0, 0, 0, 0.04),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
-        
-        .controls {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            margin-top: 32px;
-        }
-        
-        button {
-            padding: 16px 32px;
-            border: none;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .generate-btn {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            box-shadow: 0 4px 14px 0 rgba(66, 153, 225, 0.3);
-        }
-        
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px 0 rgba(66, 153, 225, 0.4);
-        }
-        
-        .generate-btn:active {
-            transform: translateY(0);
-        }
-        
-        .download-btn {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-            box-shadow: 0 4px 14px 0 rgba(72, 187, 120, 0.3);
-        }
-        
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px 0 rgba(72, 187, 120, 0.4);
-        }
-        
-        .download-btn:disabled {
-            background: #a0aec0;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .tip-card {
-            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-            border: 1px solid #90cdf4;
+
+        .chip-position {
+            background: white;
+            border: 2px solid #e2e8f0;
             border-radius: 12px;
             padding: 16px;
-            margin-top: 24px;
-            color: #2c5282;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
         }
-        
-        .tip-icon {
-            font-size: 20px;
-            flex-shrink: 0;
+
+        .chip-position:hover {
+            border-color: #cbd5e0;
         }
-        
-        /* 모바일 반응형 */
-        @media (max-width: 768px) {
-            body {
-                padding: 16px;
-            }
-            
-            .container {
-                padding: 24px;
-            }
-            
-            .language-selector {
-                top: 16px;
-                right: 16px;
-            }
-            
-            .header {
-                margin-top: 60px;
-            }
-            
-            .color-group, .chip-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .controls {
-                flex-direction: column;
-            }
-            
-            button {
-                width: 100%;
-                justify-content: center;
-            }
+
+        .chip-position.active {
+            border-color: #4299e1;
+            background: #ebf8ff;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        /* 사업자번호 스타일 */
+        .business-number {
+            font-family: 'Courier New', monospace;
+            font-size: 1.25rem;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+        }
+
+        .copy-button {
+            transition: all 0.2s ease;
+        }
+
+        .copy-button:hover {
+            background: #f3f4f6;
+            transform: scale(1.05);
+        }
+
+        .copy-button.copied {
+            background: #10b981;
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 언어 선택 버튼 -->
-        <div class="language-selector">
-            <button class="lang-btn active" onclick="changeLanguage('ko')">KR</button>
-            <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
-        </div>
-        
-        <div class="header">
-            <h1 class="title" data-kr="📱 메신저 프로필 이미지 생성기" data-en="📱 Messenger Profile Image Generator">📱 메신저 프로필 이미지 생성기</h1>
-            <p class="subtitle" data-kr="QA 환경별 프로필을 쉽게 만들어보세요" data-en="Easily create profiles for different QA environments">QA 환경별 프로필을 쉽게 만들어보세요</p>
-        </div>
-        
-        <div class="section">
-            <div class="section-title" data-kr="🎯 메인 텍스트 설정" data-en="🎯 Main Text Settings">🎯 메인 텍스트 설정</div>
-            
-            <div class="input-group">
-                <label for="mainText" data-kr="메인 텍스트 (줄바꿈은 |로 구분)" data-en="Main Text (Use | for line breaks)">메인 텍스트 (줄바꿈은 |로 구분)</label>
-                <input type="text" id="mainText" data-kr-placeholder="JK 또는 JK|운영자" data-en-placeholder="JK or JK|Admin" placeholder="JK 또는 JK|운영자" value="JK">
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="header px-6 flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+                <h1 class="text-2xl font-bold text-white">🛠️ Work Assistant</h1>
+                <nav class="flex space-x-2">
+                    <button id="tab-profile" class="tab-button active" onclick="showTab('profile')">
+                        <span data-kr="📱 프로필 생성기" data-en="📱 Profile Generator">📱 프로필 생성기</span>
+                    </button>
+                    <button id="tab-business" class="tab-button" onclick="showTab('business')">
+                        <span data-kr="🏢 사업자번호 생성기" data-en="🏢 Business Number Generator">🏢 사업자번호 생성기</span>
+                    </button>
+                </nav>
             </div>
             
-            <div class="input-group">
-                <label for="mainTextSize" data-kr="메인 텍스트 크기" data-en="Main Text Size">메인 텍스트 크기</label>
-                <div class="range-group">
-                    <input type="range" id="mainTextSize" min="50" max="200" value="120">
-                    <input type="number" class="range-value" id="mainTextSizeValue" min="50" max="200" value="120">
+            <!-- Language Selector -->
+            <div class="flex items-center space-x-4">
+                <div class="flex bg-white/20 rounded-lg p-1">
+                    <button class="lang-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-white bg-white/30" onclick="changeLanguage('ko')">KR</button>
+                    <button class="lang-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-white/70 hover:text-white" onclick="changeLanguage('en')">EN</button>
                 </div>
             </div>
-            
-            <div class="color-group">
-                <div class="color-input">
-                    <input type="color" id="bgColor" value="#4a90e2">
-                    <label for="bgColor" data-kr="배경색" data-en="Background Color">배경색</label>
-                </div>
-                <div class="color-input">
-                    <input type="color" id="mainTextColor" value="#ffffff">
-                    <label for="mainTextColor" data-kr="메인 텍스트색" data-en="Main Text Color">메인 텍스트색</label>
-                </div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <div class="section-title" data-kr="🏷️ 칩 위치 및 설정 (0-4개 선택 가능)" data-en="🏷️ Chip Position & Settings (Select 0-4 chips)">🏷️ 칩 위치 및 설정 (0-4개 선택 가능)</div>
-            
-            <div class="chip-grid">
-                <!-- 좌상단 -->
-                <div class="chip-position active" data-position="topLeft">
-                    <div class="position-header">
-                        <div class="position-toggle">✓</div>
-                        <div class="position-label" data-kr="🏷️ 좌상단" data-en="🏷️ Top Left">🏷️ 좌상단</div>
-                    </div>
-                    <div class="chip-settings">
-                        <div class="input-group">
-                            <input type="text" id="topLeftText" data-kr-placeholder="운영" data-en-placeholder="Production" placeholder="운영" value="운영">
+        </header>
+
+        <!-- Main Content -->
+        <main class="overflow-y-auto p-6">
+            <!-- Profile Generator Tab -->
+            <div id="profile-content" class="tab-content">
+                <div class="max-w-6xl mx-auto">
+                    <div class="card p-8">
+                        <div class="text-center mb-8">
+                            <h2 class="text-3xl font-bold text-gray-800 mb-2" data-kr="메신저 프로필 이미지 생성기" data-en="Messenger Profile Image Generator">메신저 프로필 이미지 생성기</h2>
+                            <p class="text-gray-600" data-kr="QA 환경별 프로필을 쉽게 만들어보세요" data-en="Easily create profiles for different QA environments">QA 환경별 프로필을 쉽게 만들어보세요</p>
                         </div>
-                        <div class="color-group">
-                            <div class="color-input">
-                                <input type="color" id="topLeftChipBg" value="#ffffff">
-                                <label data-kr="배경색" data-en="Background">배경색</label>
-                            </div>
-                            <div class="color-input">
-                                <input type="color" id="topLeftChipText" value="#4a90e2">
-                                <label data-kr="텍스트색" data-en="Text Color">텍스트색</label>
-                            </div>
-                        </div>
-                        <div class="range-group">
-                            <input type="range" id="topLeftChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
-                            <input type="number" class="range-value" id="topLeftChipSizeValue" min="0.5" max="2.0" step="0.1" value="1.0">
-                        </div>
-                        <div class="range-group">
-                            <input type="range" id="topLeftChipTextSize" min="12" max="30" value="18">
-                            <input type="number" class="range-value" id="topLeftChipTextSizeValue" min="12" max="30" value="18">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 우상단 -->
-                <div class="chip-position" data-position="topRight">
-                    <div class="position-header">
-                        <div class="position-toggle"></div>
-                        <div class="position-label" data-kr="🏷️ 우상단" data-en="🏷️ Top Right">🏷️ 우상단</div>
-                    </div>
-                    <div class="chip-settings">
-                        <div class="input-group">
-                            <input type="text" id="topRightText" data-kr-placeholder="개발" data-en-placeholder="Development" placeholder="개발" value="개발">
-                        </div>
-                        <div class="color-group">
-                            <div class="color-input">
-                                <input type="color" id="topRightChipBg" value="#ffffff">
-                                <label data-kr="배경색" data-en="Background">배경색</label>
-                            </div>
-                            <div class="color-input">
-                                <input type="color" id="topRightChipText" value="#e53e3e">
-                                <label data-kr="텍스트색" data-en="Text Color">텍스트색</label>
+
+                        <!-- Main Text Settings -->
+                        <div class="bg-gray-50 rounded-xl p-6 mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4" data-kr="🎯 메인 텍스트 설정" data-en="🎯 Main Text Settings">🎯 메인 텍스트 설정</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="mainText" class="block text-sm font-medium text-gray-700 mb-2" data-kr="메인 텍스트 (줄바꿈은 |로 구분)" data-en="Main Text (Use | for line breaks)">메인 텍스트 (줄바꿈은 |로 구분)</label>
+                                    <input type="text" id="mainText" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-primary-400 focus:outline-none" placeholder="JK 또는 JK|운영자" value="JK">
+                                </div>
+                                
+                                <div>
+                                    <label for="mainTextSize" class="block text-sm font-medium text-gray-700 mb-2" data-kr="메인 텍스트 크기" data-en="Main Text Size">메인 텍스트 크기</label>
+                                    <div class="flex items-center space-x-4">
+                                        <input type="range" id="mainTextSize" min="50" max="200" value="120" class="flex-1">
+                                        <input type="number" id="mainTextSizeValue" min="50" max="200" value="120" class="w-20 px-3 py-2 border border-gray-200 rounded-lg">
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" data-kr="배경색" data-en="Background Color">배경색</label>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="color" id="bgColor" value="#4a90e2" class="w-12 h-12 rounded-lg cursor-pointer">
+                                            <input type="text" id="bgColorHex" value="#4a90e2" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" data-kr="메인 텍스트색" data-en="Main Text Color">메인 텍스트색</label>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="color" id="mainTextColor" value="#ffffff" class="w-12 h-12 rounded-lg cursor-pointer">
+                                            <input type="text" id="mainTextColorHex" value="#ffffff" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="range-group">
-                            <input type="range" id="topRightChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
-                            <input type="number" class="range-value" id="topRightChipSizeValue" min="0.5" max="2.0" step="0.1" value="1.0">
-                        </div>
-                        <div class="range-group">
-                            <input type="range" id="topRightChipTextSize" min="12" max="30" value="18">
-                            <input type="number" class="range-value" id="topRightChipTextSizeValue" min="12" max="30" value="18">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 좌하단 -->
-                <div class="chip-position" data-position="bottomLeft">
-                    <div class="position-header">
-                        <div class="position-toggle"></div>
-                        <div class="position-label" data-kr="🏷️ 좌하단" data-en="🏷️ Bottom Left">🏷️ 좌하단</div>
-                    </div>
-                    <div class="chip-settings">
-                        <div class="input-group">
-                            <input type="text" id="bottomLeftText" data-kr-placeholder="테스트" data-en-placeholder="Testing" placeholder="테스트" value="테스트">
-                        </div>
-                        <div class="color-group">
-                            <div class="color-input">
-                                <input type="color" id="bottomLeftChipBg" value="#ffffff">
-                                <label data-kr="배경색" data-en="Background">배경색</label>
-                            </div>
-                            <div class="color-input">
-                                <input type="color" id="bottomLeftChipText" value="#38a169">
-                                <label data-kr="텍스트색" data-en="Text Color">텍스트색</label>
-                            </div>
-                        </div>
-                        <div class="range-group">
-                            <input type="range" id="bottomLeftChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
-                            <input type="number" class="range-value" id="bottomLeftChipSizeValue" min="0.5" max="2.0" step="0.1" value="1.0">
-                        </div>
-                        <div class="range-group">
-                            <input type="range" id="bottomLeftChipTextSize" min="12" max="30" value="18">
-                            <input type="number" class="range-value" id="bottomLeftChipTextSizeValue" min="12" max="30" value="18">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 우하단 -->
-                <div class="chip-position active" data-position="bottomRight">
-                    <div class="position-header">
-                        <div class="position-toggle">✓</div>
-                        <div class="position-label" data-kr="🏷️ 우하단" data-en="🏷️ Bottom Right">🏷️ 우하단</div>
-                    </div>
-                    <div class="chip-settings">
-                        <div class="input-group">
-                            <input type="text" id="bottomRightText" data-kr-placeholder="실사용" data-en-placeholder="Live" placeholder="실사용" value="실사용">
-                        </div>
-                        <div class="color-group">
-                            <div class="color-input">
-                                <input type="color" id="bottomRightChipBg" value="#ffffff">
-                                <label data-kr="배경색" data-en="Background">배경색</label>
-                            </div>
-                            <div class="color-input">
-                                <input type="color" id="bottomRightChipText" value="#4a90e2">
-                                <label data-kr="텍스트색" data-en="Text Color">텍스트색</label>
+
+                        <!-- Chip Settings -->
+                        <div class="bg-gray-50 rounded-xl p-6 mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4" data-kr="🏷️ 칩 위치 및 설정 (0-4개 선택 가능)" data-en="🏷️ Chip Position & Settings (Select 0-4 chips)">🏷️ 칩 위치 및 설정 (0-4개 선택 가능)</h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Top Left -->
+                                <div class="chip-position active" data-position="topLeft">
+                                    <div class="flex items-center mb-3">
+                                        <input type="checkbox" id="topLeftEnabled" checked class="mr-3 w-5 h-5">
+                                        <label for="topLeftEnabled" class="font-medium" data-kr="좌상단" data-en="Top Left">좌상단</label>
+                                    </div>
+                                    <input type="text" id="topLeftText" placeholder="운영" value="운영" class="w-full px-3 py-2 border border-gray-200 rounded-lg mb-2">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="color" id="topLeftChipBg" value="#ffffff" class="w-full h-10 rounded cursor-pointer">
+                                        <input type="color" id="topLeftChipText" value="#4a90e2" class="w-full h-10 rounded cursor-pointer">
+                                    </div>
+                                </div>
+
+                                <!-- Top Right -->
+                                <div class="chip-position" data-position="topRight">
+                                    <div class="flex items-center mb-3">
+                                        <input type="checkbox" id="topRightEnabled" class="mr-3 w-5 h-5">
+                                        <label for="topRightEnabled" class="font-medium" data-kr="우상단" data-en="Top Right">우상단</label>
+                                    </div>
+                                    <input type="text" id="topRightText" placeholder="개발" value="개발" class="w-full px-3 py-2 border border-gray-200 rounded-lg mb-2">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="color" id="topRightChipBg" value="#ffffff" class="w-full h-10 rounded cursor-pointer">
+                                        <input type="color" id="topRightChipText" value="#e53e3e" class="w-full h-10 rounded cursor-pointer">
+                                    </div>
+                                </div>
+
+                                <!-- Bottom Left -->
+                                <div class="chip-position" data-position="bottomLeft">
+                                    <div class="flex items-center mb-3">
+                                        <input type="checkbox" id="bottomLeftEnabled" class="mr-3 w-5 h-5">
+                                        <label for="bottomLeftEnabled" class="font-medium" data-kr="좌하단" data-en="Bottom Left">좌하단</label>
+                                    </div>
+                                    <input type="text" id="bottomLeftText" placeholder="테스트" value="테스트" class="w-full px-3 py-2 border border-gray-200 rounded-lg mb-2">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="color" id="bottomLeftChipBg" value="#ffffff" class="w-full h-10 rounded cursor-pointer">
+                                        <input type="color" id="bottomLeftChipText" value="#38a169" class="w-full h-10 rounded cursor-pointer">
+                                    </div>
+                                </div>
+
+                                <!-- Bottom Right -->
+                                <div class="chip-position active" data-position="bottomRight">
+                                    <div class="flex items-center mb-3">
+                                        <input type="checkbox" id="bottomRightEnabled" checked class="mr-3 w-5 h-5">
+                                        <label for="bottomRightEnabled" class="font-medium" data-kr="우하단" data-en="Bottom Right">우하단</label>
+                                    </div>
+                                    <input type="text" id="bottomRightText" placeholder="실사용" value="실사용" class="w-full px-3 py-2 border border-gray-200 rounded-lg mb-2">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="color" id="bottomRightChipBg" value="#ffffff" class="w-full h-10 rounded cursor-pointer">
+                                        <input type="color" id="bottomRightChipText" value="#4a90e2" class="w-full h-10 rounded cursor-pointer">
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="range-group">
-                            <input type="range" id="bottomRightChipSize" min="0.5" max="2.0" step="0.1" value="1.0">
-                            <input type="number" class="range-value" id="bottomRightChipSizeValue" min="0.5" max="2.0" step="0.1" value="1.0">
+
+                        <!-- Preview -->
+                        <div class="flex justify-center my-8">
+                            <canvas id="canvas" class="preview-canvas" width="300" height="300"></canvas>
                         </div>
-                        <div class="range-group">
-                            <input type="range" id="bottomRightChipTextSize" min="12" max="30" value="18">
-                            <input type="number" class="range-value" id="bottomRightChipTextSizeValue" min="12" max="30" value="18">
+
+                        <!-- Controls -->
+                        <div class="flex justify-center space-x-4">
+                            <button onclick="generateImage()" class="px-6 py-3 bg-gradient-to-r from-primary-400 to-primary-500 text-white font-semibold rounded-lg hover:from-primary-500 hover:to-primary-600 transition-all transform hover:scale-105">
+                                <span data-kr="🎨 이미지 생성" data-en="🎨 Generate Image">🎨 이미지 생성</span>
+                            </button>
+                            <button id="downloadBtn" onclick="downloadImage()" disabled class="px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold rounded-lg hover:from-green-500 hover:to-green-600 transition-all transform hover:scale-105 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed">
+                                <span data-kr="📥 다운로드" data-en="📥 Download">📥 다운로드</span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="preview-container">
-            <canvas id="canvas" class="preview-canvas" width="300" height="300"></canvas>
-        </div>
-        
-        <div class="controls">
-            <button class="generate-btn" onclick="generateImage()">
-                <span data-kr="🎨 이미지 생성" data-en="🎨 Generate Image">🎨 이미지 생성</span>
-            </button>
-            <button class="download-btn" id="downloadBtn" onclick="downloadImage()" disabled>
-                <span data-kr="📥 다운로드" data-en="📥 Download">📥 다운로드</span>
-            </button>
-        </div>
-        
-        <div class="tip-card">
-            <span class="tip-icon">💡</span>
-            <div>
-                <div data-kr="<strong>팁:</strong> 각 칩 위치를 클릭해서 활성화/비활성화할 수 있습니다. 0-4개까지 자유롭게 선택하세요!<br>메인 텍스트에서 2줄 표시는 | 기호로 구분하세요 (예: JK|운영자)" data-en="<strong>Tip:</strong> Click each chip position to activate/deactivate. Feel free to select from 0-4 chips!<br>For 2-line main text, separate with | symbol (e.g., JK|Admin)">
-                    <strong>팁:</strong> 각 칩 위치를 클릭해서 활성화/비활성화할 수 있습니다. 0-4개까지 자유롭게 선택하세요!
-                    <br>메인 텍스트에서 2줄 표시는 | 기호로 구분하세요 (예: JK|운영자)
+
+            <!-- Business Number Generator Tab -->
+            <div id="business-content" class="tab-content hidden">
+                <div class="max-w-6xl mx-auto">
+                    <div class="card p-8">
+                        <div class="text-center mb-8">
+                            <h2 class="text-3xl font-bold text-gray-800 mb-2" data-kr="사업자번호 생성기" data-en="Business Number Generator">사업자번호 생성기</h2>
+                            <p class="text-gray-600" data-kr="오늘 날짜 기반 유효한 사업자번호를 생성합니다" data-en="Generate valid business numbers based on today's date">오늘 날짜 기반 유효한 사업자번호를 생성합니다</p>
+                        </div>
+
+                        <!-- Today's Date Display -->
+                        <div class="bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl p-6 mb-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-2" data-kr="📅 오늘 날짜" data-en="📅 Today's Date">📅 오늘 날짜</h3>
+                                    <p id="todayDate" class="text-2xl font-bold text-primary-600"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-600 mb-1" data-kr="생성 패턴" data-en="Generation Pattern">생성 패턴</p>
+                                    <p class="font-mono text-lg">000-<span class="text-primary-600">MM-DD</span>XXX</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Generation Options -->
+                        <div class="bg-gray-50 rounded-xl p-6 mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4" data-kr="⚙️ 생성 옵션" data-en="⚙️ Generation Options">⚙️ 생성 옵션</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-kr="생성 개수" data-en="Number to Generate">생성 개수</label>
+                                    <select id="generateCount" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-primary-400 focus:outline-none">
+                                        <option value="10">10개</option>
+                                        <option value="20">20개</option>
+                                        <option value="30">30개</option>
+                                        <option value="50">50개</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-kr="패턴 유형" data-en="Pattern Type">패턴 유형</label>
+                                    <select id="patternType" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-primary-400 focus:outline-none">
+                                        <option value="mmdd" data-kr="월일 패턴 (MM-DD)" data-en="Month-Day Pattern (MM-DD)">월일 패턴 (MM-DD)</option>
+                                        <option value="yymmdd" data-kr="년월일 패턴 (YY-MMDD)" data-en="Year-Month-Day Pattern (YY-MMDD)">년월일 패턴 (YY-MMDD)</option>
+                                        <option value="sequential" data-kr="순차 번호" data-en="Sequential Numbers">순차 번호</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <div class="text-center mb-6">
+                            <button onclick="generateBusinessNumbers()" class="px-8 py-3 bg-gradient-to-r from-primary-400 to-primary-500 text-white font-semibold rounded-lg hover:from-primary-500 hover:to-primary-600 transition-all transform hover:scale-105">
+                                <span data-kr="🎲 사업자번호 생성" data-en="🎲 Generate Numbers">🎲 사업자번호 생성</span>
+                            </button>
+                        </div>
+
+                        <!-- Generated Numbers List -->
+                        <div id="numbersList" class="bg-gray-50 rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800" data-kr="📋 생성된 사업자번호" data-en="📋 Generated Numbers">📋 생성된 사업자번호</h3>
+                                <button onclick="downloadExcel()" id="excelDownloadBtn" disabled class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+                                    <span data-kr="📊 Excel 다운로드" data-en="📊 Download Excel">📊 Excel 다운로드</span>
+                                </button>
+                            </div>
+                            <div id="numbersContainer" class="space-y-2 max-h-96 overflow-y-auto">
+                                <p class="text-center text-gray-500 py-8" data-kr="생성 버튼을 클릭하여 사업자번호를 생성하세요" data-en="Click generate button to create business numbers">생성 버튼을 클릭하여 사업자번호를 생성하세요</p>
+                            </div>
+                        </div>
+
+                        <!-- Info Card -->
+                        <div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-blue-700" data-kr="💡 생성된 모든 번호는 유효한 사업자번호 체크섬 규칙을 만족합니다. 앞 3자리는 000으로 고정되어 있으며, 나머지 자리는 오늘 날짜 패턴을 포함합니다." 
+                                       data-en="💡 All generated numbers satisfy valid business number checksum rules. The first 3 digits are fixed as 000, and the remaining digits include today's date pattern.">
+                                        💡 생성된 모든 번호는 유효한 사업자번호 체크섬 규칙을 만족합니다. 앞 3자리는 000으로 고정되어 있으며, 나머지 자리는 오늘 날짜 패턴을 포함합니다.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
+        // Global variables
+        let currentLanguage = 'ko';
+        let currentTab = 'profile';
+        let generatedNumbers = [];
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const downloadBtn = document.getElementById('downloadBtn');
-        let currentLanguage = 'ko';
-        
-        // 칩 위치별 좌표 정의
-        const chipPositions = {
-            topLeft: { x: 75, y: 50 },
-            topRight: { x: 225, y: 50 },
-            bottomLeft: { x: 75, y: 250 },
-            bottomRight: { x: 225, y: 250 }
-        };
-        
-        // 언어 변경 함수
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTodayDate();
+            initializeProfileGenerator();
+            setupEventListeners();
+        });
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`${tabName}-content`).classList.remove('hidden');
+            currentTab = tabName;
+        }
+
+        // Language change
         function changeLanguage(lang) {
             currentLanguage = lang;
             
-            // 언어 버튼 스타일 업데이트
             document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.remove('active');
+                btn.classList.remove('bg-white/30');
+                btn.classList.add('text-white/70', 'hover:text-white');
             });
-            document.querySelector(`[onclick="changeLanguage('${lang}')"]`).classList.add('active');
             
-            // 언어 코드 매핑 (ko -> kr)
-            const dataLang = lang === 'ko' ? 'kr' : 'en';
+            const activeBtn = event.target;
+            activeBtn.classList.add('bg-white/30');
+            activeBtn.classList.remove('text-white/70', 'hover:text-white');
             
-            // 모든 텍스트 업데이트
+            // Update all text elements
             document.querySelectorAll('[data-kr][data-en]').forEach(element => {
-                const newText = element.getAttribute(`data-${dataLang}`);
-                if (newText) {
-                    // HTML이 포함된 경우 innerHTML 사용, 아니면 textContent 사용
-                    if (newText.includes('<') && newText.includes('>')) {
-                        element.innerHTML = newText;
-                    } else {
-                        element.textContent = newText;
-                    }
-                }
+                const text = element.getAttribute(`data-${lang === 'ko' ? 'kr' : 'en'}`);
+                if (text) element.textContent = text;
             });
             
-            // placeholder 업데이트
-            document.querySelectorAll('[data-kr-placeholder][data-en-placeholder]').forEach(element => {
-                const newPlaceholder = element.getAttribute(`data-${dataLang}-placeholder`);
-                if (newPlaceholder) {
-                    element.placeholder = newPlaceholder;
-                }
-            });
-            
-            // HTML lang 속성 업데이트
-            document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
+            updateTodayDate();
         }
-        
-        // 칩 토글 기능
-        document.querySelectorAll('.chip-position').forEach(chip => {
-            chip.addEventListener('click', function() {
-                this.classList.toggle('active');
-                const toggle = this.querySelector('.position-toggle');
-                if (this.classList.contains('active')) {
-                    toggle.textContent = '✓';
+
+        // Update today's date
+        function updateTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            
+            const dateElement = document.getElementById('todayDate');
+            if (dateElement) {
+                if (currentLanguage === 'ko') {
+                    dateElement.textContent = `${year}년 ${month}월 ${day}일`;
                 } else {
-                    toggle.textContent = '';
+                    dateElement.textContent = `${year}-${month}-${day}`;
                 }
+            }
+        }
+
+        // Business Number Generation Logic
+        function validateBusinessNumber(number) {
+            const weights = [1, 3, 7, 1, 3, 7, 1, 3, 5];
+            const nums = number.replace(/-/g, '').split('').map(Number);
+            
+            if (nums.length !== 10) return false;
+            
+            let sum = 0;
+            for (let i = 0; i < 9; i++) {
+                sum += nums[i] * weights[i];
+            }
+            
+            sum += Math.floor((nums[8] * 5) / 10);
+            const checkDigit = (10 - (sum % 10)) % 10;
+            
+            return checkDigit === nums[9];
+        }
+
+        function generateValidBusinessNumber(prefix, middle, suffix) {
+            // prefix(3) + middle(2) + suffix(4) + checkDigit(1) = 10 digits total
+            const base9 = prefix + middle + suffix;
+            
+            // Calculate check digit
+            const weights = [1, 3, 7, 1, 3, 7, 1, 3, 5];
+            const nums = base9.split('').map(Number);
+            
+            let sum = 0;
+            for (let i = 0; i < 9; i++) {
+                sum += nums[i] * weights[i];
+            }
+            
+            sum += Math.floor((nums[8] * 5) / 10);
+            const checkDigit = (10 - (sum % 10)) % 10;
+            
+            return base9 + checkDigit;
+        }
+
+        function generateBusinessNumbers() {
+            const count = parseInt(document.getElementById('generateCount').value);
+            const patternType = document.getElementById('patternType').value;
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const year = String(today.getFullYear()).substring(2);
+            
+            generatedNumbers = [];
+            const usedNumbers = new Set();
+            let attempts = 0;
+            const maxAttempts = count * 100; // Prevent infinite loop
+            
+            while (generatedNumbers.length < count && attempts < maxAttempts) {
+                attempts++;
+                let middle, suffix;
+                
+                switch (patternType) {
+                    case 'mmdd':
+                        // 000-MM-DD + 3 random digits + check digit
+                        middle = month;
+                        suffix = day + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+                        break;
+                    case 'yymmdd':
+                        // 000-YY-MMDD + 1 random digit + check digit  
+                        middle = year;
+                        suffix = month + day + String(Math.floor(Math.random() * 10));
+                        break;
+                    case 'sequential':
+                        // 000-XX-XXXX + check digit (sequential)
+                        const seq = String(generatedNumbers.length + 1).padStart(6, '0');
+                        middle = seq.substring(0, 2);
+                        suffix = seq.substring(2, 6);
+                        break;
+                    default:
+                        middle = month;
+                        suffix = day + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+                }
+                
+                // Ensure we have exactly 2 digits for middle and 4 for suffix
+                middle = String(middle).padStart(2, '0').substring(0, 2);
+                suffix = String(suffix).padStart(4, '0').substring(0, 4);
+                
+                const number = generateValidBusinessNumber('000', middle, suffix);
+                
+                if (number && !usedNumbers.has(number)) {
+                    usedNumbers.add(number);
+                    generatedNumbers.push({
+                        raw: number,
+                        formatted: `${number.substring(0, 3)}-${number.substring(3, 5)}-${number.substring(5, 10)}`
+                    });
+                }
+            }
+            
+            displayGeneratedNumbers();
+            document.getElementById('excelDownloadBtn').disabled = false;
+            showToast(currentLanguage === 'ko' ? '사업자번호가 생성되었습니다!' : 'Business numbers generated!', 'success');
+        }
+
+        function displayGeneratedNumbers() {
+            const container = document.getElementById('numbersContainer');
+            
+            if (generatedNumbers.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 py-8">${currentLanguage === 'ko' ? '생성된 번호가 없습니다' : 'No generated numbers'}</p>`;
+                return;
+            }
+            
+            container.innerHTML = generatedNumbers.map((num, index) => `
+                <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-500 font-medium">${String(index + 1).padStart(2, '0')}</span>
+                        <span class="business-number text-gray-800">${num.formatted}</span>
+                    </div>
+                    <button onclick="copyNumber('${num.formatted}')" class="copy-button p-2 rounded-lg hover:bg-gray-100">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function copyNumber(number) {
+            navigator.clipboard.writeText(number).then(() => {
+                const button = event.currentTarget;
+                button.classList.add('copied');
+                button.innerHTML = `
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+                
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    button.innerHTML = `
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    `;
+                }, 2000);
+            });
+        }
+
+        function downloadExcel() {
+            if (generatedNumbers.length === 0) return;
+            
+            const ws_data = [
+                [currentLanguage === 'ko' ? '번호' : 'No.', currentLanguage === 'ko' ? '사업자번호' : 'Business Number', currentLanguage === 'ko' ? '생성일' : 'Generated Date']
+            ];
+            
+            const today = new Date().toLocaleDateString(currentLanguage === 'ko' ? 'ko-KR' : 'en-US');
+            
+            generatedNumbers.forEach((num, index) => {
+                ws_data.push([index + 1, num.formatted, today]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, currentLanguage === 'ko' ? '사업자번호' : 'Business Numbers');
+            
+            const fileName = `business_numbers_${new Date().getTime()}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showToast(currentLanguage === 'ko' ? 'Excel 파일이 다운로드되었습니다!' : 'Excel file downloaded!', 'success');
+        }
+
+        // Profile Generator Functions
+        function initializeProfileGenerator() {
+            setupCanvasEventListeners();
+            updateColorHexInputs();
+            generateImage();
+        }
+
+        function setupEventListeners() {
+            // Color sync
+            document.getElementById('bgColor').addEventListener('input', function() {
+                document.getElementById('bgColorHex').value = this.value;
                 generateImage();
             });
-        });
-        
-        // 범위 입력값 표시 업데이트 및 동기화
-        function updateRangeValues() {
-            // 메인 텍스트
-            document.getElementById('mainTextSizeValue').value = document.getElementById('mainTextSize').value;
             
-            // 각 칩 위치별 업데이트
+            document.getElementById('bgColorHex').addEventListener('input', function() {
+                document.getElementById('bgColor').value = this.value;
+                generateImage();
+            });
+            
+            document.getElementById('mainTextColor').addEventListener('input', function() {
+                document.getElementById('mainTextColorHex').value = this.value;
+                generateImage();
+            });
+            
+            document.getElementById('mainTextColorHex').addEventListener('input', function() {
+                document.getElementById('mainTextColor').value = this.value;
+                generateImage();
+            });
+            
+            // Text size sync
+            document.getElementById('mainTextSize').addEventListener('input', function() {
+                document.getElementById('mainTextSizeValue').value = this.value;
+                generateImage();
+            });
+            
+            document.getElementById('mainTextSizeValue').addEventListener('input', function() {
+                document.getElementById('mainTextSize').value = this.value;
+                generateImage();
+            });
+            
+            // Other inputs
+            document.getElementById('mainText').addEventListener('input', generateImage);
+            
+            // Chip checkboxes
             ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].forEach(position => {
-                document.getElementById(`${position}ChipSizeValue`).value = document.getElementById(`${position}ChipSize`).value;
-                document.getElementById(`${position}ChipTextSizeValue`).value = document.getElementById(`${position}ChipTextSize`).value;
+                const checkbox = document.getElementById(`${position}Enabled`);
+                const chipDiv = checkbox.closest('.chip-position');
+                
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        chipDiv.classList.add('active');
+                    } else {
+                        chipDiv.classList.remove('active');
+                    }
+                    generateImage();
+                });
+                
+                // Chip inputs
+                document.getElementById(`${position}Text`).addEventListener('input', generateImage);
+                document.getElementById(`${position}ChipBg`).addEventListener('input', generateImage);
+                document.getElementById(`${position}ChipText`).addEventListener('input', generateImage);
             });
         }
-        
-        function updateSliderValues() {
-            // 메인 텍스트
-            document.getElementById('mainTextSize').value = document.getElementById('mainTextSizeValue').value;
-            
-            // 각 칩 위치별 업데이트
-            ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].forEach(position => {
-                document.getElementById(`${position}ChipSize`).value = document.getElementById(`${position}ChipSizeValue`).value;
-                document.getElementById(`${position}ChipTextSize`).value = document.getElementById(`${position}ChipTextSizeValue`).value;
+
+        function setupCanvasEventListeners() {
+            // Auto-generate on any input change
+            document.addEventListener('input', function(e) {
+                if (currentTab === 'profile' && e.target.id && e.target.id.includes('Text')) {
+                    generateImage();
+                }
             });
         }
-        
-        // 초기 이미지 생성
-        updateRangeValues();
-        generateImage();
-        
-        // 실시간 미리보기를 위한 이벤트 리스너
-        document.addEventListener('input', function(e) {
-            // 슬라이더가 변경되면 숫자 입력을 업데이트
-            if (e.target.type === 'range') {
-                updateRangeValues();
-            }
-            // 숫자 입력이 변경되면 슬라이더를 업데이트
-            else if (e.target.classList.contains('range-value')) {
-                updateSliderValues();
-            }
-            generateImage();
-        });
-        
+
+        function updateColorHexInputs() {
+            document.getElementById('bgColorHex').value = document.getElementById('bgColor').value;
+            document.getElementById('mainTextColorHex').value = document.getElementById('mainTextColor').value;
+        }
+
         function generateImage() {
             const mainText = document.getElementById('mainText').value || 'JK';
             const mainTextSize = parseInt(document.getElementById('mainTextSize').value);
             const bgColor = document.getElementById('bgColor').value;
             const mainTextColor = document.getElementById('mainTextColor').value;
             
-            // 캔버스 클리어
+            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 배경 그리기
+            // Draw background
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 메인 텍스트 그리기 (2줄 지원)
+            // Draw main text
             const textLines = mainText.split('|');
             ctx.fillStyle = mainTextColor;
             ctx.textAlign = 'center';
@@ -743,10 +759,8 @@
             ctx.font = `bold ${mainTextSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
             
             if (textLines.length === 1) {
-                // 1줄
                 ctx.fillText(textLines[0], canvas.width / 2, canvas.height / 2);
             } else {
-                // 2줄
                 const lineHeight = mainTextSize * 1.1;
                 const startY = canvas.height / 2 - (lineHeight * (textLines.length - 1)) / 2;
                 textLines.forEach((line, index) => {
@@ -754,40 +768,45 @@
                 });
             }
             
-            // 활성화된 칩들 그리기
-            document.querySelectorAll('.chip-position.active').forEach(chipElement => {
-                const position = chipElement.dataset.position;
-                const text = document.getElementById(`${position}Text`).value;
-                
-                if (text.trim()) {
-                    const bgColor = document.getElementById(`${position}ChipBg`).value;
-                    const textColor = document.getElementById(`${position}ChipText`).value;
-                    const size = parseFloat(document.getElementById(`${position}ChipSize`).value);
-                    const textSize = parseInt(document.getElementById(`${position}ChipTextSize`).value);
-                    const coords = chipPositions[position];
-                    
-                    drawPillChip(ctx, text, coords.x, coords.y, bgColor, textColor, size, textSize);
+            // Draw chips
+            const chipPositions = {
+                topLeft: { x: 75, y: 50 },
+                topRight: { x: 225, y: 50 },
+                bottomLeft: { x: 75, y: 250 },
+                bottomRight: { x: 225, y: 250 }
+            };
+            
+            ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].forEach(position => {
+                if (document.getElementById(`${position}Enabled`).checked) {
+                    const text = document.getElementById(`${position}Text`).value;
+                    if (text.trim()) {
+                        const bgColor = document.getElementById(`${position}ChipBg`).value;
+                        const textColor = document.getElementById(`${position}ChipText`).value;
+                        const coords = chipPositions[position];
+                        drawChip(ctx, text, coords.x, coords.y, bgColor, textColor);
+                    }
                 }
             });
             
-            downloadBtn.disabled = false;
+            document.getElementById('downloadBtn').disabled = false;
         }
-        
-        function drawPillChip(ctx, text, x, y, bgColor, textColor, size, textSize) {
+
+        function drawChip(ctx, text, x, y, bgColor, textColor) {
+            const textSize = 18;
             ctx.font = `bold ${textSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
             const textWidth = ctx.measureText(text).width;
-            const chipWidth = (textWidth + 30) * size;
-            const chipHeight = 26 * size;
+            const chipWidth = textWidth + 30;
+            const chipHeight = 26;
             const radius = chipHeight / 2;
             
-            // 그림자 효과 추가
+            // Shadow
             ctx.save();
             ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-            ctx.shadowBlur = 8 * size;
+            ctx.shadowBlur = 8;
             ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 2 * size;
+            ctx.shadowOffsetY = 2;
             
-            // 알약 모양 배경 그리기 (둥근 사각형)
+            // Background
             ctx.fillStyle = bgColor;
             ctx.beginPath();
             ctx.moveTo(x - chipWidth/2 + radius, y - chipHeight/2);
@@ -800,40 +819,52 @@
             
             ctx.restore();
             
-            // 알약 모양 테두리 그리기
+            // Border
             ctx.strokeStyle = textColor;
             ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x - chipWidth/2 + radius, y - chipHeight/2);
-            ctx.lineTo(x + chipWidth/2 - radius, y - chipHeight/2);
-            ctx.arc(x + chipWidth/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
-            ctx.lineTo(x - chipWidth/2 + radius, y + chipHeight/2);
-            ctx.arc(x - chipWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
-            ctx.closePath();
             ctx.stroke();
             
-            // 칩 텍스트 그리기
+            // Text
             ctx.fillStyle = textColor;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(text, x, y);
         }
-        
+
         function downloadImage() {
-            // 정사각형으로 다시 그리기 (1080x1080 고해상도)
             const highResCanvas = document.createElement('canvas');
             const highResCtx = highResCanvas.getContext('2d');
             highResCanvas.width = 1080;
             highResCanvas.height = 1080;
             
+            const scale = 3.6;
+            
+            // Redraw at high resolution
             const mainText = document.getElementById('mainText').value || 'JK';
-            const mainTextSize = parseInt(document.getElementById('mainTextSize').value);
+            const mainTextSize = parseInt(document.getElementById('mainTextSize').value) * scale;
             const bgColor = document.getElementById('bgColor').value;
             const mainTextColor = document.getElementById('mainTextColor').value;
             
-            const scale = 3.6; // 1080/300 = 3.6 배율
+            highResCtx.fillStyle = bgColor;
+            highResCtx.fillRect(0, 0, highResCanvas.width, highResCanvas.height);
             
-            // 고해상도 칩 위치 좌표
+            const textLines = mainText.split('|');
+            highResCtx.fillStyle = mainTextColor;
+            highResCtx.textAlign = 'center';
+            highResCtx.textBaseline = 'middle';
+            highResCtx.font = `bold ${mainTextSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+            
+            if (textLines.length === 1) {
+                highResCtx.fillText(textLines[0], highResCanvas.width / 2, highResCanvas.height / 2);
+            } else {
+                const lineHeight = mainTextSize * 1.1;
+                const startY = highResCanvas.height / 2 - (lineHeight * (textLines.length - 1)) / 2;
+                textLines.forEach((line, index) => {
+                    highResCtx.fillText(line, highResCanvas.width / 2, startY + (lineHeight * index));
+                });
+            }
+            
+            // High-res chips
             const highResChipPositions = {
                 topLeft: { x: 270, y: 180 },
                 topRight: { x: 810, y: 180 },
@@ -841,67 +872,43 @@
                 bottomRight: { x: 810, y: 900 }
             };
             
-            // 고해상도로 다시 그리기
-            highResCtx.fillStyle = bgColor;
-            highResCtx.fillRect(0, 0, highResCanvas.width, highResCanvas.height);
-            
-            // 메인 텍스트 그리기 (고해상도)
-            const textLines = mainText.split('|');
-            highResCtx.fillStyle = mainTextColor;
-            highResCtx.textAlign = 'center';
-            highResCtx.textBaseline = 'middle';
-            highResCtx.font = `bold ${mainTextSize * scale}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
-            
-            if (textLines.length === 1) {
-                // 1줄
-                highResCtx.fillText(textLines[0], highResCanvas.width / 2, highResCanvas.height / 2);
-            } else {
-                // 2줄
-                const lineHeight = mainTextSize * scale * 1.1;
-                const startY = highResCanvas.height / 2 - (lineHeight * (textLines.length - 1)) / 2;
-                textLines.forEach((line, index) => {
-                    highResCtx.fillText(line, highResCanvas.width / 2, startY + (lineHeight * index));
-                });
-            }
-            
-            // 활성화된 칩들 그리기 (고해상도)
-            document.querySelectorAll('.chip-position.active').forEach(chipElement => {
-                const position = chipElement.dataset.position;
-                const text = document.getElementById(`${position}Text`).value;
-                
-                if (text.trim()) {
-                    const bgColor = document.getElementById(`${position}ChipBg`).value;
-                    const textColor = document.getElementById(`${position}ChipText`).value;
-                    const size = parseFloat(document.getElementById(`${position}ChipSize`).value);
-                    const textSize = parseInt(document.getElementById(`${position}ChipTextSize`).value);
-                    const coords = highResChipPositions[position];
-                    
-                    drawHighResPillChip(highResCtx, text, coords.x, coords.y, bgColor, textColor, size, textSize * scale);
+            ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].forEach(position => {
+                if (document.getElementById(`${position}Enabled`).checked) {
+                    const text = document.getElementById(`${position}Text`).value;
+                    if (text.trim()) {
+                        const bgColor = document.getElementById(`${position}ChipBg`).value;
+                        const textColor = document.getElementById(`${position}ChipText`).value;
+                        const coords = highResChipPositions[position];
+                        drawHighResChip(highResCtx, text, coords.x, coords.y, bgColor, textColor, scale);
+                    }
                 }
             });
             
-            // 다운로드
+            // Download
             const link = document.createElement('a');
             link.download = `messenger_profile_${mainText.replace('|', '_')}_${Date.now()}.png`;
             link.href = highResCanvas.toDataURL();
             link.click();
+            
+            showToast(currentLanguage === 'ko' ? '이미지가 다운로드되었습니다!' : 'Image downloaded!', 'success');
         }
-        
-        function drawHighResPillChip(ctx, text, x, y, bgColor, textColor, size, textSize) {
+
+        function drawHighResChip(ctx, text, x, y, bgColor, textColor, scale) {
+            const textSize = 18 * scale;
             ctx.font = `bold ${textSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
             const textWidth = ctx.measureText(text).width;
-            const chipWidth = (textWidth + 108) * size;
-            const chipHeight = 94 * size;
+            const chipWidth = textWidth + (30 * scale);
+            const chipHeight = 26 * scale;
             const radius = chipHeight / 2;
             
-            // 그림자 효과 추가 (고해상도)
+            // Shadow
             ctx.save();
             ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-            ctx.shadowBlur = 28 * size;
+            ctx.shadowBlur = 8 * scale;
             ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 8 * size;
+            ctx.shadowOffsetY = 2 * scale;
             
-            // 알약 모양 배경 그리기
+            // Background
             ctx.fillStyle = bgColor;
             ctx.beginPath();
             ctx.moveTo(x - chipWidth/2 + radius, y - chipHeight/2);
@@ -914,23 +921,31 @@
             
             ctx.restore();
             
-            // 알약 모양 테두리 그리기
+            // Border
             ctx.strokeStyle = textColor;
-            ctx.lineWidth = 7;
-            ctx.beginPath();
-            ctx.moveTo(x - chipWidth/2 + radius, y - chipHeight/2);
-            ctx.lineTo(x + chipWidth/2 - radius, y - chipHeight/2);
-            ctx.arc(x + chipWidth/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
-            ctx.lineTo(x - chipWidth/2 + radius, y + chipHeight/2);
-            ctx.arc(x - chipWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
-            ctx.closePath();
+            ctx.lineWidth = 2 * scale;
             ctx.stroke();
             
-            // 칩 텍스트 그리기
+            // Text
             ctx.fillStyle = textColor;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(text, x, y);
+        }
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
         }
     </script>
 </body>
