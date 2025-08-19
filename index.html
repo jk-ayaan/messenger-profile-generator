@@ -358,7 +358,7 @@
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm text-gray-600 mb-1" data-kr="생성 패턴" data-en="Generation Pattern">생성 패턴</p>
-                                    <p class="font-mono text-lg">000-<span class="text-primary-600">MM-DD</span>XXX</p>
+                                    <p class="font-mono text-lg">000-<span class="text-primary-600">XX</span>-<span class="text-blue-600">MMDD</span>X</p>
                                 </div>
                             </div>
                         </div>
@@ -377,11 +377,16 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-kr="패턴 유형" data-en="Pattern Type">패턴 유형</label>
-                                    <select id="patternType" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-primary-400 focus:outline-none">
-                                        <option value="mmdd" data-kr="월일 패턴 (MM-DD)" data-en="Month-Day Pattern (MM-DD)">월일 패턴 (MM-DD)</option>
-                                        <option value="yymmdd" data-kr="년월일 패턴 (YY-MMDD)" data-en="Year-Month-Day Pattern (YY-MMDD)">년월일 패턴 (YY-MMDD)</option>
-                                        <option value="sequential" data-kr="순차 번호" data-en="Sequential Numbers">순차 번호</option>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-kr="사업자 유형" data-en="Business Type">사업자 유형</label>
+                                    <select id="businessType" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-primary-400 focus:outline-none">
+                                        <option value="individual" data-kr="개인사업자 (01-79)" data-en="Individual Business (01-79)">개인사업자 (01-79)</option>
+                                        <option value="individual2" data-kr="개인사업자 (90-99)" data-en="Individual Business (90-99)">개인사업자 (90-99)</option>
+                                        <option value="corporate" data-kr="법인 영리 국내 (81,85-88)" data-en="Domestic Corporation (81,85-88)">법인 영리 국내 (81,85-88)</option>
+                                        <option value="foreign" data-kr="법인 영리 해외 (84)" data-en="Foreign Corporation (84)">법인 영리 해외 (84)</option>
+                                        <option value="nonprofit" data-kr="비영리/국가 및 지자체 (82,83)" data-en="Non-profit/Government (82,83)">비영리/국가 및 지자체 (82,83)</option>
+                                        <option value="voluntary" data-kr="임의단체 (80,89)" data-en="Voluntary Organization (80,89)">임의단체 (80,89)</option>
+                                        <option value="all" data-kr="전체 랜덤" data-en="All Random">전체 랜덤</option>
+                                        <option value="all-max" data-kr="전체 MAX 생성 (모든 유형)" data-en="Generate MAX (All Types)">전체 MAX 생성 (모든 유형)</option>
                                     </select>
                                 </div>
                             </div>
@@ -398,9 +403,14 @@
                         <div id="numbersList" class="bg-gray-50 rounded-xl p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-semibold text-gray-800" data-kr="📋 생성된 사업자번호" data-en="📋 Generated Numbers">📋 생성된 사업자번호</h3>
-                                <button onclick="downloadExcel()" id="excelDownloadBtn" disabled class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
-                                    <span data-kr="📊 Excel 다운로드" data-en="📊 Download Excel">📊 Excel 다운로드</span>
-                                </button>
+                                <div class="flex space-x-2">
+                                    <button onclick="downloadExcel()" id="excelDownloadBtn" disabled class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+                                        <span data-kr="📊 Excel" data-en="📊 Excel">📊 Excel</span>
+                                    </button>
+                                    <button onclick="downloadPostmanCSV()" id="postmanDownloadBtn" disabled class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+                                        <span data-kr="📮 Postman CSV" data-en="📮 Postman CSV">📮 Postman CSV</span>
+                                    </button>
+                                </div>
                             </div>
                             <div id="numbersContainer" class="space-y-2 max-h-96 overflow-y-auto">
                                 <p class="text-center text-gray-500 py-8" data-kr="생성 버튼을 클릭하여 사업자번호를 생성하세요" data-en="Click generate button to create business numbers">생성 버튼을 클릭하여 사업자번호를 생성하세요</p>
@@ -420,6 +430,47 @@
                                        data-en="💡 All generated numbers satisfy valid business number checksum rules. The first 3 digits are fixed as 000, and the remaining digits include today's date pattern.">
                                         💡 생성된 모든 번호는 유효한 사업자번호 체크섬 규칙을 만족합니다. 앞 3자리는 000으로 고정되어 있으며, 나머지 자리는 오늘 날짜 패턴을 포함합니다.
                                     </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Postman Script Section -->
+                        <div class="mt-6 bg-gray-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4" data-kr="📮 Postman 사용법" data-en="📮 Postman Usage">📮 Postman 사용법</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-medium text-gray-700 mb-2" data-kr="1. CSV 파일 다운로드" data-en="1. Download CSV File">1. CSV 파일 다운로드</h4>
+                                    <p class="text-sm text-gray-600" data-kr="위의 'Postman CSV' 버튼을 클릭하여 CSV 파일을 다운로드합니다." data-en="Click the 'Postman CSV' button above to download the CSV file.">위의 'Postman CSV' 버튼을 클릭하여 CSV 파일을 다운로드합니다.</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-700 mb-2" data-kr="2. Pre-request Script" data-en="2. Pre-request Script">2. Pre-request Script</h4>
+                                    <div class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
+                                        <pre class="text-xs"><code>// Body에서 businessNumber를 CSV의 값으로 치환
+let body = JSON.parse(pm.request.body.raw);
+
+// CSV에서 가져온 사업자번호 (10자리 숫자)
+const businessNumber = pm.iterationData.get("businessNumber");
+
+// Body 내의 특정 키 값을 사업자번호로 치환
+// 예시: body.businessRegistrationNumber = businessNumber;
+// 또는 중첩된 객체의 경우:
+// body.company.registrationNumber = businessNumber;
+
+// 원하는 키를 사업자번호로 치환
+body.businessNumber = businessNumber;  // 키 이름은 실제 API에 맞게 수정
+
+// 수정된 body를 다시 설정
+pm.request.body.raw = JSON.stringify(body);</code></pre>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-700 mb-2" data-kr="3. Collection Runner 설정" data-en="3. Collection Runner Settings">3. Collection Runner 설정</h4>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li data-kr="• Collection Runner를 열고 CSV 파일을 선택" data-en="• Open Collection Runner and select CSV file">• Collection Runner를 열고 CSV 파일을 선택</li>
+                                        <li data-kr="• 'Data' 옵션에서 다운로드한 CSV 파일 업로드" data-en="• Upload downloaded CSV file in 'Data' option">• 'Data' 옵션에서 다운로드한 CSV 파일 업로드</li>
+                                        <li data-kr="• Iterations를 CSV 행 수만큼 설정" data-en="• Set Iterations to match CSV row count">• Iterations를 CSV 행 수만큼 설정</li>
+                                        <li data-kr="• Run collection 실행" data-en="• Run collection">• Run collection 실행</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -534,63 +585,140 @@
             return base9 + checkDigit;
         }
 
+        // Get middle two digits based on business type
+        function getMiddleDigits(businessType) {
+            const ranges = {
+                'individual': Array.from({length: 79}, (_, i) => String(i + 1).padStart(2, '0')), // 01-79
+                'individual2': Array.from({length: 10}, (_, i) => String(i + 90).padStart(2, '0')), // 90-99
+                'corporate': ['81', '85', '86', '87', '88'], // 법인 영리 국내
+                'foreign': ['84'], // 법인 영리 해외
+                'nonprofit': ['82', '83'], // 비영리/국가 및 지자체
+                'voluntary': ['80', '89'], // 임의단체
+                'all': [] // Will be filled with all possible values
+            };
+            
+            // For 'all', combine all ranges
+            if (businessType === 'all') {
+                for (let key in ranges) {
+                    if (key !== 'all') {
+                        ranges.all = ranges.all.concat(ranges[key]);
+                    }
+                }
+            }
+            
+            const validMiddles = ranges[businessType] || ranges['individual'];
+            return validMiddles[Math.floor(Math.random() * validMiddles.length)];
+        }
+
         function generateBusinessNumbers() {
             const count = parseInt(document.getElementById('generateCount').value);
-            const patternType = document.getElementById('patternType').value;
+            const businessType = document.getElementById('businessType').value;
             const today = new Date();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
-            const year = String(today.getFullYear()).substring(2);
             
             generatedNumbers = [];
             const usedNumbers = new Set();
-            let attempts = 0;
-            const maxAttempts = count * 100; // Prevent infinite loop
             
-            while (generatedNumbers.length < count && attempts < maxAttempts) {
-                attempts++;
-                let middle, suffix;
+            // Special handling for all-max option
+            if (businessType === 'all-max') {
+                // Generate boundary values and representative samples for each type
+                const testCases = [];
                 
-                switch (patternType) {
-                    case 'mmdd':
-                        // 000-MM-DD + 3 random digits + check digit
-                        middle = month;
-                        suffix = day + String(Math.floor(Math.random() * 100)).padStart(2, '0');
-                        break;
-                    case 'yymmdd':
-                        // 000-YY-MMDD + 1 random digit + check digit  
-                        middle = year;
-                        suffix = month + day + String(Math.floor(Math.random() * 10));
-                        break;
-                    case 'sequential':
-                        // 000-XX-XXXX + check digit (sequential)
-                        const seq = String(generatedNumbers.length + 1).padStart(6, '0');
-                        middle = seq.substring(0, 2);
-                        suffix = seq.substring(2, 6);
-                        break;
-                    default:
-                        middle = month;
-                        suffix = day + String(Math.floor(Math.random() * 100)).padStart(2, '0');
-                }
+                // Individual (01-79) - 경계값: 01, 02, 40, 78, 79
+                testCases.push('01', '02', '40', '78', '79');
                 
-                // Ensure we have exactly 2 digits for middle and 4 for suffix
-                middle = String(middle).padStart(2, '0').substring(0, 2);
-                suffix = String(suffix).padStart(4, '0').substring(0, 4);
+                // Voluntary (80, 89) - 모든 값
+                testCases.push('80', '89');
                 
-                const number = generateValidBusinessNumber('000', middle, suffix);
+                // Corporate domestic (81, 85-88) - 모든 값
+                testCases.push('81', '85', '86', '87', '88');
                 
-                if (number && !usedNumbers.has(number)) {
-                    usedNumbers.add(number);
-                    generatedNumbers.push({
-                        raw: number,
-                        formatted: `${number.substring(0, 3)}-${number.substring(3, 5)}-${number.substring(5, 10)}`
-                    });
+                // Non-profit (82, 83) - 모든 값
+                testCases.push('82', '83');
+                
+                // Foreign (84) - 모든 값
+                testCases.push('84');
+                
+                // Individual2 (90-99) - 경계값: 90, 91, 95, 98, 99
+                testCases.push('90', '91', '95', '98', '99');
+                
+                // Generate multiple numbers for each middle digit with MMDD pattern
+                testCases.forEach(middle => {
+                    // Generate up to 10 variations for each middle digit
+                    let generated = 0;
+                    for (let randomDigit = 0; randomDigit < 10 && generated < 10; randomDigit++) {
+                        const suffix = month + day + String(randomDigit);
+                        const suffixFormatted = String(suffix).padStart(4, '0').substring(0, 4);
+                        const number = generateValidBusinessNumber('000', middle, suffixFormatted);
+                        
+                        if (number && !usedNumbers.has(number)) {
+                            usedNumbers.add(number);
+                            generatedNumbers.push({
+                                raw: number,
+                                formatted: `${number.substring(0, 3)}-${number.substring(3, 5)}-${number.substring(5, 10)}`,
+                                type: getBusinessTypeName('all', middle) + ` (${middle})`
+                            });
+                            generated++;
+                        }
+                    }
+                });
+                
+                // Sort by middle digits for better organization
+                generatedNumbers.sort((a, b) => {
+                    const middleA = parseInt(a.raw.substring(3, 5));
+                    const middleB = parseInt(b.raw.substring(3, 5));
+                    return middleA - middleB;
+                });
+            } else {
+                // Normal generation
+                let attempts = 0;
+                const maxAttempts = count * 1000;
+                
+                while (generatedNumbers.length < count && attempts < maxAttempts) {
+                    attempts++;
+                    
+                    // Get middle two digits based on business type
+                    const middle = getMiddleDigits(businessType);
+                    
+                    // Use MMDD pattern for suffix (month-day + random digit)
+                    const suffix = month + day + String(Math.floor(Math.random() * 10));
+                    
+                    // Ensure we have exactly 2 digits for middle and 4 for suffix
+                    const middleFormatted = String(middle).padStart(2, '0').substring(0, 2);
+                    const suffixFormatted = String(suffix).padStart(4, '0').substring(0, 4);
+                    
+                    const number = generateValidBusinessNumber('000', middleFormatted, suffixFormatted);
+                    
+                    if (number && !usedNumbers.has(number)) {
+                        usedNumbers.add(number);
+                        generatedNumbers.push({
+                            raw: number,
+                            formatted: `${number.substring(0, 3)}-${number.substring(3, 5)}-${number.substring(5, 10)}`,
+                            type: getBusinessTypeName(businessType, middle)
+                        });
+                    }
                 }
             }
             
             displayGeneratedNumbers();
             document.getElementById('excelDownloadBtn').disabled = false;
-            showToast(currentLanguage === 'ko' ? '사업자번호가 생성되었습니다!' : 'Business numbers generated!', 'success');
+            document.getElementById('postmanDownloadBtn').disabled = false;
+            showToast(currentLanguage === 'ko' ? `사업자번호 ${generatedNumbers.length}개가 생성되었습니다!` : `${generatedNumbers.length} business numbers generated!`, 'success');
+        }
+
+        // Get business type name for display
+        function getBusinessTypeName(businessType, middleDigits) {
+            const middle = parseInt(middleDigits);
+            
+            if (middle >= 1 && middle <= 79) return currentLanguage === 'ko' ? '개인사업자' : 'Individual';
+            if (middle >= 90 && middle <= 99) return currentLanguage === 'ko' ? '개인사업자' : 'Individual';
+            if ([81, 85, 86, 87, 88].includes(middle)) return currentLanguage === 'ko' ? '법인(국내)' : 'Corp(Domestic)';
+            if (middle === 84) return currentLanguage === 'ko' ? '법인(해외)' : 'Corp(Foreign)';
+            if ([82, 83].includes(middle)) return currentLanguage === 'ko' ? '비영리/공공' : 'Non-profit/Gov';
+            if ([80, 89].includes(middle)) return currentLanguage === 'ko' ? '임의단체' : 'Voluntary';
+            
+            return currentLanguage === 'ko' ? '기타' : 'Other';
         }
 
         function displayGeneratedNumbers() {
@@ -606,6 +734,7 @@
                     <div class="flex items-center space-x-4">
                         <span class="text-sm text-gray-500 font-medium">${String(index + 1).padStart(2, '0')}</span>
                         <span class="business-number text-gray-800">${num.formatted}</span>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">${num.type}</span>
                     </div>
                     <button onclick="copyNumber('${num.formatted}')" class="copy-button p-2 rounded-lg hover:bg-gray-100">
                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -641,13 +770,16 @@
             if (generatedNumbers.length === 0) return;
             
             const ws_data = [
-                [currentLanguage === 'ko' ? '번호' : 'No.', currentLanguage === 'ko' ? '사업자번호' : 'Business Number', currentLanguage === 'ko' ? '생성일' : 'Generated Date']
+                [currentLanguage === 'ko' ? '번호' : 'No.', 
+                 currentLanguage === 'ko' ? '사업자번호' : 'Business Number', 
+                 currentLanguage === 'ko' ? '유형' : 'Type',
+                 currentLanguage === 'ko' ? '생성일' : 'Generated Date']
             ];
             
             const today = new Date().toLocaleDateString(currentLanguage === 'ko' ? 'ko-KR' : 'en-US');
             
             generatedNumbers.forEach((num, index) => {
-                ws_data.push([index + 1, num.formatted, today]);
+                ws_data.push([index + 1, num.formatted, num.type, today]);
             });
             
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
@@ -658,6 +790,33 @@
             XLSX.writeFile(wb, fileName);
             
             showToast(currentLanguage === 'ko' ? 'Excel 파일이 다운로드되었습니다!' : 'Excel file downloaded!', 'success');
+        }
+
+        function downloadPostmanCSV() {
+            if (generatedNumbers.length === 0) return;
+            
+            // Create CSV content for Postman
+            let csvContent = "businessNumber\n"; // Header for Postman iteration data
+            
+            generatedNumbers.forEach(num => {
+                // Use raw number (10 digits without hyphens) for Postman
+                csvContent += num.raw + "\n";
+            });
+            
+            // Create blob and download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `postman_business_numbers_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast(currentLanguage === 'ko' ? 'Postman CSV 파일이 다운로드되었습니다!' : 'Postman CSV file downloaded!', 'success');
         }
 
         // Profile Generator Functions
