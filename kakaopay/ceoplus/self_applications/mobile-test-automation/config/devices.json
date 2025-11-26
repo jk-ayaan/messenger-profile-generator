@@ -1,0 +1,78 @@
+{
+  "devices": [
+    {
+      "name": "Pixel_6",
+      "platform": "Android",
+      "capabilities": {
+        "platformName": "Android",
+        "deviceName": "Pixel_6",
+        "udid": "1B021FDF6005FB",
+        "automationName": "UiAutomator2",
+        "appPackage": "com.kakaopay.biz.sandbox",
+        "appActivity": "com.kakaopay.biz.landing.LandingActivity",
+        "noReset": true,
+        "fullReset": false,
+        "newCommandTimeout": 300,
+        "autoGrantPermissions": true
+      },
+      "appium_port": 4723
+    },
+    {
+      "name": "Galaxy_Fold",
+      "platform": "Android",
+      "capabilities": {
+        "platformName": "Android",
+        "deviceName": "SM_F966N",
+        "udid": "R3CY705XJTL",
+        "automationName": "UiAutomator2",
+        "appPackage": "com.kakaopay.biz.sandbox",
+        "appActivity": "com.kakaopay.biz.landing.LandingActivity",
+        "noReset": true,
+        "fullReset": false,
+        "newCommandTimeout": 300,
+        "autoGrantPermissions": true
+      },
+      "appium_port": 4724
+    },
+    {
+      "name": "iPhone12mini",
+      "platform": "iOS",
+      "capabilities": {
+        "platformName": "iOS",
+        "platformVersion": "18.7",
+        "deviceName": "iPhone12mini",
+        "udid": "00008101-000C04493429003A",
+        "automationName": "XCUITest",
+        "bundleId": "com.kakaopay.biz.sandbox",
+        "noReset": true,
+        "fullReset": false,
+        "newCommandTimeout": 300,
+        "wdaLaunchTimeout": 120000,
+        "wdaConnectionTimeout": 240000,
+        "useNewWDA": false,
+        "showXcodeLog": true
+      },
+      "appium_port": 4725
+    },
+    {
+      "name": "iPhone14ProMax",
+      "platform": "iOS",
+      "capabilities": {
+        "platformName": "iOS",
+        "platformVersion": "26.1",
+        "deviceName": "iPhone14ProMax",
+        "udid": "00008120-00024D820AEBC01E",
+        "automationName": "XCUITest",
+        "bundleId": "com.kakaopay.biz.sandbox",
+        "noReset": true,
+        "fullReset": false,
+        "newCommandTimeout": 300,
+        "wdaLaunchTimeout": 120000,
+        "wdaConnectionTimeout": 240000,
+        "useNewWDA": false,
+        "showXcodeLog": true
+      },
+      "appium_port": 4726
+    }
+  ]
+}
